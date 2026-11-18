@@ -25,7 +25,7 @@ npm run dev      # the site on localhost
 npm run gates    # type check, lint, tests and a full build
 ```
 
-The functions need keys that are set in Netlify, not in this repo. Without them the site still runs: JohnLM says it is offline and the music page uses its saved list.
+The functions need keys that are set in Netlify, not in this repo. In local dev, JohnLM's questions are passed to the live site's answer service (see `astro.config.mjs`), and the music page uses its saved list.
 
 ## JohnLM
 
@@ -40,7 +40,7 @@ The names and numbers JohnLM must never say are kept in a local file that is not
 
 ## Screens and recordings
 
-Product screens in the case studies are the real apps on fictional data. Where a state was seeded, the study or its alt text says so.
+Product screens in the case studies are the real apps running on fictional demo data.
 
 ## About this copy
 
