@@ -1,0 +1,139 @@
+---
+dek: "Kora's merchants across Africa were losing sales when customers tried to pay by bank transfer. I simplified the checkout, removing its most familiar button, and support tickets about payment instructions fell 43%."
+role: Product designer, then senior product designer
+status: Shipped
+draft: true
+---
+import Led from '../../components/cs/Led.astro';
+import Figure from '../../components/cs/Figure.astro';
+import Quote from '../../components/cs/Quote.astro';
+import Chart from '../../components/cs/Chart.astro';
+import FigureRow from '../../components/cs/FigureRow.astro';
+import Compare from '../../components/cs/Compare.astro';
+import Stats from '../../components/cs/Stats.astro';
+
+## Overview
+
+Kora, formerly Korapay, lets African businesses collect and send money by bank transfer and card. It competes with Paystack and Flutterwave, so trust and quick setup win merchants.
+
+I joined as a product designer and left as a senior product designer. Over three years, as Kora grew from early startup to profitable company, <Led>I led design for Kora's checkout, merchant onboarding and dashboard.</Led> I also created Kora's first design system, led two designers and ran the technical design interviews for new hires. One question ran through all of it: does this person know where their money is?
+
+While I was there, Kora processed $300M+ and its checkout completed 1.2M+ payments. It has since passed $1B.
+
+This study leads with the checkout. Settlements, onboarding and the dashboard follow as shorter sections.
+
+## What's the impact?
+
+- **Checkout.** Support tickets about payment instructions fell about 43%, from 4.2 to 2.4 per 1,000 completed checkouts, comparing the three months before and after (a customer success team KPI)
+- **Checkout.** Failed payments from customers sending several transfers for one checkout fell from about 8% to 5%
+- **Settlements.** Over 1,000 merchants had used the settlements tool I designed by the time I left, and large stablecoin settlements that reached the right wallet on the first full attempt rose from 88% to 96%
+- **Onboarding.** After the rebuild, 90-day merchant retention rose from 60% to 72.5% (24 then 29 of 40 comparable merchants, a small sample), and monthly active merchants rose about 15%
+- **Checkout, as a team.** Checkout success went from 38% to 59%, and customers who came back after a failed payment from 42% to 67%
+
+## What's the problem?
+
+For its first six months, Kora's checkout only took bank transfers. It had handled over a million transactions, and as volume grew, the share that succeeded kept falling. Over $1m a week went back out as refunds on payments that never completed.
+
+<Stats
+  items={[
+    { value: '38%', label: 'of unique customers’ payments went through' },
+    { value: '42%', label: 'came back after a failed payment' },
+  ]}
+/>
+
+The team wanted to add card payments. A second way to pay on top of a failing flow would only spread the problem, so I started with why people dropped off.
+
+## Why payments failed
+
+With the product and data team I traced drop-off in Mixpanel, checked it against customer feedback, and put competitors' checkouts through the same failures. Three things stood out:
+
+- **"I have made this payment" had become a barrier.** Many failed transactions came after someone tapped it without sending money. Each tap started its own payment check, which, with our payment API's limits, could clash with the notice that the money had arrived. Someone then had to sort it out by hand.
+- **A few kobo could fail a payment.** A kobo is a hundredth of a naira, and sending NGN 1,000.00 instead of NGN 1,000.02 failed a transfer. Flutterwave avoided this by rounding up to the whole naira.
+- **People missed the details that mattered:** that the account number expired after an hour, and that they had to send one transfer, not several. Because of our third-party integrations, an expired transfer also had to be resolved by hand.
+
+<Figure frame="plain" src="/assets/kora/modal-flows-expiry.jpg" alt="FigJam map of three ways to show when the payment account expires: a time with a countdown, a time without a countdown, and no time at all, with notes that without a countdown people don't know exactly when the account stops working, and without a time they can't tell it still works" />
+
+## What did we ship?
+
+I narrowed the fix to two flows and tested both with colleagues and a small group of customers.
+
+<Compare
+  sides={[
+    { label: 'Considered', title: 'Keep the button, fix the flow around it', for: ['Familiar: people expect to say they have paid', 'People feel involved at the moment they send money'], against: ['Every tap still started a check that could clash with the notice that the money had arrived', 'The button’s own flow of wait times and help screens stays'] },
+    { label: 'What we shipped', title: 'Remove the “I have made this payment” button', for: ['We check on our end, so the customer doesn’t have to', 'Nothing gets in the way of the notice that the money has arrived', 'About 72% fewer steps'], against: ['A rushed person could send money and miss the screen saying we were watching for it'], chosen: true },
+  ]}
+/>
+
+Because we couldn't check a transfer in real time, the button had grown its own flow of wait times, help screens and support links. People tapped through it whether or not they'd paid, so we removed the button and most of that flow with it.
+
+Instead, the checkout did the checking, with a short loader while we confirmed a transfer. Only the help people still needed stayed, rewritten, and every screen said what you owe, how to pay, how long you have, and whether it worked.
+
+<FigureRow
+  items={[
+    { srcs: ['/assets/kora/ck-pay.jpg', '/assets/kora/ck-checking.jpg', '/assets/kora/ck-success.jpg'], alt: 'Paying by bank transfer: the amount and the account to pay into, then the checkout confirming the transfer, then success', label: 'When it works', steps: ['Pay', 'Checking', 'Paid'], holds: [5, 1.8, 2.6] },
+    { srcs: ['/assets/kora/ck-help.jpg', '/assets/kora/ck-help-2.jpg', '/assets/kora/ck-unconfirmed.jpg', '/assets/kora/ck-failed.jpg'], alt: 'When a transfer goes wrong: help in two steps (check your banking app again, then a note that a wrong amount, or a transfer we can’t confirm, will be refunded), a screen offering another transfer or a different method, and a failed payment with a way to try again', label: 'When it goes wrong', steps: ['Help, step 1', 'Help, step 2', 'Can’t confirm', 'Failed'], holds: [5, 5, 5, 2.6] },
+  ]}
+/>
+
+We also rounded every amount up to the whole naira, so a few kobo could no longer fail a payment, gave the account's expiry more weight, and cut the transfer details down to what people needed.
+
+<Figure src="/assets/kora/ck-overlay.jpg" alt="The Kora checkout open over a demo merchant's page, asking for a single instant transfer of NGN 7,054.00, with a countdown until the account expires" />
+
+Every transfer ended in one of four ways, each with its own message:
+
+- **Paid:** the payment is confirmed.
+- **Overpaid:** we refund the difference.
+- **Underpaid:** the session stays open and we check for the outcome every 20 to 30 seconds. Either the bank sends the money back, or, if it can't, a screen says we've received the payment and will refund it within a set time.
+- **Expired or abandoned:** you try another transfer or a different way to pay.
+
+A few months after launch, engineering fixed the stuck payments and transfers could be verified instantly. The button never came back: customers were used to a checkout that did the checking for them. With transfers working, we added card payments too.
+
+## How did we do?
+
+<Chart
+  alt="Before and after the checkout redesign: payment-instruction tickets fell from 4.2 to 2.4 per 1,000 completed checkouts and failed split transfers from about 8% to 5%. As team results, checkout success rose from 38% to 59%, and customers coming back after a failed payment from 42% to 67%"
+  series={['Before', 'After']}
+  color="#1d4ed8"
+  independent
+  groups={[
+    { name: 'Tickets per 1,000', values: [{ v: 4.2, label: '4.2' }, { v: 2.4, label: '2.4' }] },
+    { name: 'Split failures', values: [{ v: 8, label: '8%' }, { v: 5, label: '5%' }] },
+    { name: 'Success (team)', values: [{ v: 38, label: '38%' }, { v: 59, label: '59%' }] },
+    { name: 'Came back (team)', values: [{ v: 42, label: '42%' }, { v: 67, label: '67%' }] },
+  ]}
+/>
+
+Tickets and failed split transfers, where someone sent the amount in several transfers, are the numbers I'd call design's. The rise in success and in customers coming back came from three things together: the engineering fix, which solved most of the hard failures, card payments, and the clearer checkout.
+
+## Settlements, run by hand first
+
+A settlement is Kora paying a merchant the money it has collected for them. Merchants wanted it faster and it wasn't on the roadmap, so the CEO and I ran settlements by hand: a Google Form for requests, a spreadsheet to track them, and WhatsApp to tell merchants where their money was. Twenty to thirty merchants used it for about three months.
+
+Merchants who took their money in stablecoins, crypto tokens tied to the dollar, wanted a test transaction first, because you can't check a wallet address the way you check a bank account. So the tool I designed to replace us had a one-dollar test step before any large transfer. It shipped, and over 1,000 merchants had used it by the time I left.
+
+The outcome we wanted was safer full-value settlements. Comparing the manual process with the tool's first 90 days, the share of large stablecoin settlements that reached the intended wallet on the first full-value attempt rose from 88% to 96%. A settlement only counted if the full amount arrived within the expected window, with no manual correction or recovery.
+
+## Onboarding, field by field
+
+Merchants can't see their money until they're through sign-up, and ours was long. I went through it field by field with engineering, operations and compliance, and asked which regulation needed each field. Some were law, some were habit, and some could move later. Several had no regulation behind them. After the rebuild, 90-day merchant retention rose from 60% to 72.5%. That compares 40 merchants on each sign-up: 24 on the old one made another successful payment in days 61 to 90, and 29 on the new one did. It's a small sample. Monthly active merchants rose about 15%.
+
+### Where compliance and I disagreed
+
+Compliance and operations wanted the business owner's ID near the start. I had moved it later, because small businesses often didn't have it to hand. The push came after the new onboarding launched, when higher-risk merchants arrived needing more documents.
+
+I proposed a conditional flow, and we worked it out together. A business profile came first, and its answers decided whether owner verification could wait. Unverified merchants could take payments but couldn't withdraw them or send money on to others, and a limit applied after that. The ID was still required, just later for merchants who could safely wait.
+
+## The dashboard
+
+I interviewed merchants of every size, from a single seller to Binance, and put the most important number first on each screen, with the deeper tools one step away. Paystack and Flutterwave had payment links, which let a merchant without a website take a payment, and Kora didn't, so we shipped them.
+
+<Figure src="/assets/kora/dash-home.jpg" alt="Kora dashboard: the dollar balance tab with available, pending and ledger balances, and recent withdrawals, transfers and a settlement" />
+
+<Figure video="/assets/kora/proto-paylink" alt="Prototype: creating a payment link in the Kora dashboard" />
+
+<Quote by="Nnamdi Awili, product design leader at Kora, on LinkedIn">I've seen him not only excel at his core - product design - but also contribute effectively beyond the scope of his role.</Quote>
+
+## Takeaways
+
+1. People expected "I have made this payment", and with our API's limits it was breaking the checkout. Check a familiar pattern against your own system before keeping it.
+2. Running settlements by hand taught us what no spec would have, like the one-dollar test step. Do the manual version first, then build what it shows.

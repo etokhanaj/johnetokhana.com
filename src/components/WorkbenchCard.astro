@@ -1,0 +1,20 @@
+---
+import type { WorkbenchItem } from '../data/site';
+
+interface Props {
+  item: WorkbenchItem;
+}
+const { item } = Astro.props;
+---
+
+<div class="wb" data-reveal>
+  <div class="date">{item.date}</div>
+  <p>{item.text}</p>
+  {
+    item.video ? (
+      <video class="shot" src={item.video} autoplay muted loop playsinline preload="none" aria-label={item.alt} />
+    ) : item.image ? (
+      <img class="shot" src={item.image} alt={item.alt ?? ''} loading="lazy" decoding="async" />
+    ) : null
+  }
+</div>

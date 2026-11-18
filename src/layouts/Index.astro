@@ -1,0 +1,40 @@
+---
+// Section index pages (/projects, /photos, /writing, /workbench) in the home page's column.
+import Base from './Base.astro';
+import { workbench } from '../data/site';
+
+interface Props {
+  title: string;
+  intro: string;
+  active: string;
+}
+
+const { title, intro, active } = Astro.props;
+const sections = [
+  { id: 'projects', label: 'Projects', href: '/projects/' },
+  { id: 'workbench', label: 'Workbench', href: '/workbench/', hidden: !workbench.visible },
+  { id: 'photos', label: 'Photos', href: '/photos/', hidden: true }, // until photos arrive
+  { id: 'writing', label: 'Writing & media', href: '/writing/' },
+];
+---
+
+<Base title={`${title} · John Etokhana`} description={intro}>
+  <nav class="side" aria-label="Sections">
+    <a class="back" href="/">← John Etokhana</a>
+    {sections.map((s) => <a href={s.href} class:list={{ active: s.id === active }} data-workbench={s.id === 'workbench' ? '' : undefined} hidden={s.hidden}>{s.label}</a>)}
+  </nav>
+  <main>
+    <section>
+      <a class="back-mobile" href="/">← John Etokhana</a>
+      <h1 class="label" data-reveal>{title}</h1>
+      <p class="desc" data-reveal>{intro}</p>
+      <slot />
+    </section>
+  </main>
+</Base>
+
+<script>
+  if (new URLSearchParams(location.search).has('workbench')) {
+    document.querySelectorAll<HTMLElement>('[data-workbench]').forEach((el) => (el.hidden = false));
+  }
+</script>

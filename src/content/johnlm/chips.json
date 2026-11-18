@@ -1,0 +1,42 @@
+{
+  "home": [
+    "What are you working on now?",
+    "Do you actually write production code?",
+    "How do you work with engineers?"
+  ],
+  "play": [
+    "Tell me about the games night",
+    "What are you building for fun?",
+    "What are you listening to?"
+  ],
+  "episode": [
+    "What did you build first, and why drop it?",
+    "What is the theatre for?",
+    "Why ship the hybrid, not the full theatre?"
+  ],
+  "rivva": [
+    "Why did Rivva close?",
+    "How did you redefine activation?",
+    "How did you make people trust Nia?"
+  ],
+  "kora": [
+    "Tell me about running settlements by hand",
+    "Why remove the \"I have made this payment\" button?",
+    "Which Kora results are yours?"
+  ],
+  "milkyway": [
+    "How did you split Lite and Pro?",
+    "Was the $30M down to design?",
+    "What would you measure next time?"
+  ],
+  "pablo": [
+    "How did you handle the disagreement with your lead?",
+    "What changed in the final swap flow?",
+    "What was your role at Advanced Blockchain?"
+  ],
+  "notes-ai": [
+    "How do you use Claude Code day to day?",
+    "What has AI got wrong for you?",
+    "How do you design AI people trust?"
+  ]
+}

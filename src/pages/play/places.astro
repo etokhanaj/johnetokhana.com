@@ -1,0 +1,487 @@
+---
+// Window seat: a replay of John's trips. A dotted world map draws each
+// flight in turn, oldest first, and a carousel of photo prints follows along;
+// the print in the middle is the flight on the map. Swiping, the arrows or
+// picking a print pauses the replay and shows that route. Open the middle
+// print and its photo grows to full size, with the boarding pass sliding out
+// underneath and its stub tearing off.
+import Base from '../../layouts/Base.astro';
+import Ticket from '../../components/Ticket.astro';
+import { play, placesLive } from '../../data/site';
+import { LONG_HAUL_MIN } from '../../scripts/passport';
+import { airports, stops } from '../../data/airports';
+import { pin, size, viewBox } from '../../lib/worldmap';
+
+const drafts = process.env.CONTEXT !== 'production';
+const years = [...new Set(play.places.map((p) => p.when.slice(-4)))];
+const countries = new Set(play.places.map((p) => p.country)).size;
+const since = years[years.length - 1];
+
+const at = (ll?: [number, number]) => (ll ? pin(ll[0], ll[1]) : null);
+const curve = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+  const lift = Math.min(Math.hypot(b.x - a.x, b.y - a.y) * 0.28, 14);
+  return `Q${((a.x + b.x) / 2).toFixed(2)} ${((a.y + b.y) / 2 - lift).toFixed(2)} ${b.x} ${b.y}`;
+};
+// Oldest first, so the replay reads as a timeline.
+const trips = [...play.places].reverse().map((p, i) => {
+  const to = at(airports[p.code]);
+  const pts = [p.from && at(airports[p.from.code]), p.via ? at(stops[p.via]) : null, to].filter(
+    (x): x is { x: number; y: number } => !!x,
+  );
+  const d = p.from && pts.length > 1 ? `M${pts[0].x} ${pts[0].y}` + pts.slice(1).map((b, k) => curve(pts[k], b)).join('') : '';
+  const words = p.from ? `${p.from.city.replace(/^London .*/, 'London')} to ${p.city}` : p.city;
+  return { p, i, d, to, year: p.when.slice(-4), now: `${p.when} · ${words}` };
+});
+const pins = [...new Map(trips.flatMap((t) => [t.p.from && [t.p.from.code, at(airports[t.p.from.code])], [t.p.code, t.to]]).filter((x): x is [string, { x: number; y: number }] => !!x && !!x[1]).map(([c, q]) => [`${q.x},${q.y}`, { c, ...q }])).values()];
+---
+
+<Base title="Window seat · John Etokhana" description="Places I’ve been lately, a photo from each." bodyClass="ws-page" noindex={!placesLive}>
+  <main class="ws">
+    <a class="cs-back" href="/?mode=play">← Play</a>
+    <h1 class="pl-label">Window seat</h1>
+    <p class="pl-sub">Places I’ve been lately, a photo from each. The map replays them in order; pick one for the story.</p>
+
+    <div class="ws-bar">
+      <p class="ws-sum"><b>{play.places.length}</b> places <span aria-hidden="true">·</span> <b>{countries}</b> countries <span aria-hidden="true">·</span> since {since}</p>
+      <div class="ws-tabs" role="group" aria-label="Show a year">
+        <span class="ws-tabs-ind" aria-hidden="true"></span>
+        <button type="button" aria-pressed="true" data-year="all">All</button>
+        {years.map((y) => <button type="button" aria-pressed="false" data-year={y}>{y}</button>)}
+      </div>
+    </div>
+
+    <section class="ws-stage" aria-label="Trips on a map">
+      <div class="ws-map" style={`aspect-ratio: ${size.w} / ${size.h}`}>
+        <img class="ws-dots" src="/play/world-dots.svg" alt="" width={size.w * 10} height={size.h * 10} />
+        <svg class="ws-routes" viewBox={viewBox} aria-hidden="true">
+          <g>{trips.map((t) => t.d && <path class="ws-arc" d={t.d} data-i={t.i} data-year={t.year} />)}</g>
+          <g>{pins.map((q) => <circle class="ws-pin" cx={q.x} cy={q.y} r="0.5" />)}</g>
+          <circle class="ws-ring" r="1" cx="0" cy="0" />
+          <circle class="ws-dest" r="0.6" cx="0" cy="0" />
+          <g class="ws-craft" visibility="hidden"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="scale(0.11) rotate(90 12 12) translate(-12 -12)" /></g>
+        </svg>
+        <button type="button" class="ws-snap" hidden><img alt="" width="240" height="240" /></button>
+      </div>
+
+      <div class="ws-controls">
+        <button type="button" class="ws-round ws-play" aria-pressed="true" aria-label="Pause the replay" data-ws-play>
+          <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
+          <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" /></svg>
+        </button>
+        <p class="ws-now" aria-live="polite" data-ws-now></p>
+        <button type="button" class="ws-round" aria-label="Previous trip" data-ws-back><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg></button>
+        <button type="button" class="ws-round" aria-label="Next trip" data-ws-fwd><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
+      </div>
+
+      <ol class="ws-track" aria-label="Trips, oldest first">
+        {trips.map((t) => (
+          <li data-i={t.i} data-year={t.year} data-now={t.now} data-x={t.to?.x} data-y={t.to?.y} data-thumb={t.p.photo?.replace('/assets/places/', '/assets/places/thumbs/')}>
+            <button type="button" class="ws-ticket" data-caption={t.p.caption} data-photo={t.p.photo} data-alt={t.p.alt ?? ''} aria-label={`${t.now}. Open the trip`}>
+              <span class="pr">
+                <span class="pr-photo">
+                  {t.p.photo ? (
+                    <img src={t.p.photo.replace('/assets/places/', '/assets/places/cards/')} alt="" loading="lazy" decoding="async" />
+                  ) : (
+                    <span class="pr-blank">{t.p.from && <b>{t.p.from.code}</b>}{t.p.from && <i aria-hidden="true">→</i>}<b>{t.p.code}</b></span>
+                  )}
+                </span>
+                <span class="pr-cap">
+                  <span class="pr-city">{t.p.city}</span>
+                  <span class="pr-meta">{t.p.when}</span>
+                </span>
+              </span>
+            </button>
+            <template><Ticket place={t.p} /></template>
+          </li>
+        ))}
+      </ol>
+    </section>
+  </main>
+
+  <dialog class="ws-detail" aria-label="Place" tabindex="-1">
+    <div class="ws-photo" data-ws-photo></div>
+    <div class="ws-ticket-big" data-ws-ticket></div>
+    <p class="ws-caption" data-ws-caption></p>
+    <div class="ws-nav">
+      <button type="button" class="ws-step" aria-label="Previous trip" data-ws-prev><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg></button>
+      <span class="ws-count" data-ws-count></span>
+      <button type="button" class="ws-step" aria-label="Next trip" data-ws-next><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
+    </div>
+    <button type="button" class="ws-close" aria-label="Close" data-ws-close>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+    </button>
+  </dialog>
+</Base>
+
+<script define:vars={{ drafts, LONG_HAUL_MIN }}>
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const morphs = !still && 'startViewTransition' in document;
+  const track = document.querySelector('.ws-track');
+  const svg = document.querySelector('.ws-routes');
+  const craft = svg?.querySelector('.ws-craft');
+  const ring = svg?.querySelector('.ws-ring');
+  const dest = svg?.querySelector('.ws-dest');
+  const nowEl = document.querySelector('[data-ws-now]');
+  const playBtn = document.querySelector('[data-ws-play]');
+  const lis = track ? [...track.querySelectorAll('li')] : [];
+  const arcs = new Map();
+  svg?.querySelectorAll('.ws-arc').forEach((a) => {
+    const len = a.getTotalLength();
+    a.style.strokeDasharray = `${len}`;
+    a.style.strokeDashoffset = `${len}`;
+    arcs.set(+a.dataset.i, { el: a, len });
+  });
+
+  // ---- The replay: one flight at a time, oldest first, then round again.
+  const DRAW = 1300;
+  const HOLD = 1500;
+  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  let list = lis;
+  let at = still ? lis.length - 1 : 0;
+  let replay = !still;
+  let playing = !still;
+  let inView = true;
+  let timer = 0;
+  let raf = 0;
+  let steering = 0; // the carousel is scrolling because we asked it to
+
+  const center = (li, smooth) => {
+    if (!track || !li) return;
+    clearTimeout(steering);
+    steering = setTimeout(() => (steering = 0), 700);
+    track.scrollTo({ left: li.offsetLeft + li.offsetWidth / 2 - track.clientWidth / 2, behavior: smooth && !still ? 'smooth' : 'auto' });
+  };
+
+  // When a flight lands, its photo pops up as a small print by the
+  // destination; it fades after a moment, or stays when the trip was picked.
+  const mapEl = document.querySelector('.ws-map');
+  const snap = document.querySelector('.ws-snap');
+  const snapImg = snap?.querySelector('img');
+  let snapTimer = 0;
+  const hideSnap = () => {
+    clearTimeout(snapTimer);
+    if (!snap || snap.hidden) return;
+    snap.classList.remove('is-on');
+    snapTimer = setTimeout(() => { if (!snap.classList.contains('is-on')) snap.hidden = true; }, 260);
+  };
+  const showSnap = (li, linger) => {
+    if (!snap || !snapImg || !svg || !mapEl || !li.dataset.thumb || !li.dataset.x) return hideSnap();
+    clearTimeout(snapTimer);
+    const m = svg.getScreenCTM();
+    if (!m) return;
+    const pt = new DOMPoint(+li.dataset.x, +li.dataset.y).matrixTransform(m);
+    const box = mapEl.getBoundingClientRect();
+    const half = 46;
+    snap.style.left = `${Math.min(Math.max(pt.x - box.left, half), box.width - half)}px`;
+    snap.style.top = `${pt.y - box.top}px`;
+    snapImg.src = li.dataset.thumb;
+    snap.dataset.i = li.dataset.i;
+    snap.setAttribute('aria-label', `Open the ticket: ${li.dataset.now}`);
+    snap.hidden = false;
+    snap.classList.remove('is-on');
+    void snap.offsetWidth;
+    snap.classList.add('is-on');
+    if (!linger) snapTimer = setTimeout(hideSnap, HOLD + 300);
+  };
+
+  const land = (li, linger) => {
+    if (!ring || !dest) return;
+    for (const c of [ring, dest]) { c.setAttribute('cx', li.dataset.x); c.setAttribute('cy', li.dataset.y); }
+    dest.classList.add('is-on');
+    ring.classList.remove('is-on');
+    void ring.getBoundingClientRect();
+    ring.classList.add('is-on');
+    showSnap(li, linger);
+  };
+
+  const fly = (a, li) => {
+    cancelAnimationFrame(raf);
+    const t0 = performance.now();
+    craft?.getAnimations().forEach((x) => x.cancel());
+    craft?.setAttribute('visibility', 'visible');
+    const frame = (now) => {
+      const t = Math.min(1, (now - t0) / DRAW);
+      const d = ease(t) * a.len;
+      a.el.style.strokeDashoffset = `${a.len - d}`;
+      const p = a.el.getPointAtLength(d);
+      const q = a.el.getPointAtLength(Math.min(a.len, d + 0.4));
+      const r = q.x === p.x && q.y === p.y ? 0 : (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI;
+      craft?.setAttribute('transform', `translate(${p.x} ${p.y}) rotate(${r})`);
+      if (t < 1) raf = requestAnimationFrame(frame);
+      else {
+        land(li, false);
+        document.dispatchEvent(new CustomEvent('passport:stamp', { detail: 'wheels-up' }));
+        const out = craft?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' });
+        if (out) out.onfinish = () => craft.setAttribute('visibility', 'hidden');
+        else craft?.setAttribute('visibility', 'hidden');
+      }
+    };
+    raf = requestAnimationFrame(frame);
+  };
+
+  const paint = (k, flying) => {
+    cancelAnimationFrame(raf);
+    craft?.getAnimations().forEach((x) => x.cancel());
+    craft?.setAttribute('visibility', 'hidden');
+    const li = list[k];
+    if (!li) return;
+    if (flying) hideSnap();
+    lis.forEach((x) => x.classList.toggle('is-on', x === li));
+    list.forEach((x, j) => {
+      const a = arcs.get(+x.dataset.i);
+      if (!a) return;
+      const drawn = !replay || j < k || (j === k && !flying);
+      if (j !== k || !flying) a.el.style.strokeDashoffset = drawn ? '0' : `${a.len}`;
+      a.el.classList.toggle('is-now', j === k);
+    });
+    const label = li.dataset.now || '';
+    if (nowEl && nowEl.textContent !== label) {
+      nowEl.textContent = label;
+      if (!still) {
+        nowEl.classList.remove('is-new');
+        void nowEl.offsetWidth;
+        nowEl.classList.add('is-new');
+      }
+    }
+    const a = arcs.get(+li.dataset.i);
+    if (flying && a) fly(a, li);
+    else if (li.dataset.x) land(li, true);
+  };
+
+  const stop = () => { clearTimeout(timer); timer = 0; };
+  const loop = () => {
+    stop();
+    if (!playing || !inView || document.hidden) return;
+    center(list[at], true);
+    paint(at, true);
+    timer = setTimeout(() => {
+      if (at < list.length - 1) { at += 1; loop(); return; }
+      timer = setTimeout(() => { at = 0; loop(); }, HOLD);
+    }, DRAW + HOLD);
+  };
+
+  const setPlaying = (on) => {
+    if (on && at >= list.length - 1) at = 0;
+    playing = on;
+    if (on) replay = true;
+    playBtn?.setAttribute('aria-pressed', String(on));
+    playBtn?.setAttribute('aria-label', on ? 'Pause the replay' : 'Play the replay');
+    if (on) loop();
+    else { stop(); paint(at, false); }
+  };
+
+  // Picking a trip by hand pauses the replay and shows every route, this one on top.
+  const pick = (k, smooth = true) => {
+    playing = false;
+    replay = false;
+    stop();
+    playBtn?.setAttribute('aria-pressed', 'false');
+    playBtn?.setAttribute('aria-label', 'Play the replay');
+    at = (k + list.length) % list.length;
+    center(list[at], smooth);
+    paint(at, false);
+  };
+
+  playBtn?.addEventListener('click', () => setPlaying(!playing));
+  document.querySelector('[data-ws-back]')?.addEventListener('click', () => pick(at - 1));
+  document.querySelector('[data-ws-fwd]')?.addEventListener('click', () => pick(at + 1));
+  track?.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      pick(at + (e.key === 'ArrowRight' ? 1 : -1), false); // keys jump; a smooth scroll per press lags when held
+      list[at]?.querySelector('button')?.focus({ preventScroll: true });
+    }
+  });
+  // Swiping the carousel: when it settles, the card in the middle becomes the trip.
+  let settle = 0;
+  let touched = false; // only a real swipe, wheel or drag counts, not the snap after our own scroll
+  ['pointerdown', 'wheel', 'touchstart'].forEach((ev) => track?.addEventListener(ev, () => { touched = true; }, { passive: true }));
+  track?.addEventListener('scroll', () => {
+    if (steering || !touched) return;
+    clearTimeout(settle);
+    settle = setTimeout(() => {
+      const mid = track.scrollLeft + track.clientWidth / 2;
+      let best = at;
+      let gap = Infinity;
+      list.forEach((li, j) => {
+        const g = Math.abs(li.offsetLeft + li.offsetWidth / 2 - mid);
+        if (g < gap) { gap = g; best = j; }
+      });
+      touched = false;
+      if (best !== at || playing) pick(best, false);
+    }, 140);
+  }, { passive: true });
+
+  new IntersectionObserver(([e]) => {
+    inView = e.isIntersecting;
+    if (inView && playing && !timer) loop();
+    if (!inView) stop();
+  }, { threshold: 0.25 }).observe(document.querySelector('.ws-map'));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && playing) loop(); else stop(); });
+
+  // ---- Year tabs: the map and the carousel show one year, or all.
+  const tabs = [...document.querySelectorAll('.ws-tabs button')];
+  // The pressed year sits on a pill that slides to it, like the dock's Work/Play switch
+  const tabBox = document.querySelector('.ws-tabs');
+  const tabInd = tabBox.querySelector('.ws-tabs-ind');
+  const placeInd = (animate) => {
+    const b = tabs.find((x) => x.getAttribute('aria-pressed') === 'true');
+    if (!b) return;
+    if (!animate) tabInd.style.transition = 'none';
+    tabInd.style.width = `${b.offsetWidth}px`;
+    tabInd.style.height = `${b.offsetHeight}px`;
+    tabInd.style.transform = `translate(${b.offsetLeft}px, ${b.offsetTop}px)`;
+    tabBox.classList.add('has-ind');
+    if (!animate) { void tabInd.offsetWidth; tabInd.style.transition = ''; }
+  };
+  // Placed once the tabs have a size, and again whenever that changes (fonts, rotation)
+  new ResizeObserver(() => placeInd(false)).observe(tabBox);
+  tabs.forEach((t) =>
+    t.addEventListener('click', () => {
+      const y = t.dataset.year;
+      tabs.forEach((x) => x.setAttribute('aria-pressed', String(x === t)));
+      placeInd(true);
+      lis.forEach((li) => { li.hidden = y !== 'all' && li.dataset.year !== y; });
+      arcs.forEach((a) => a.el.classList.toggle('is-out', y !== 'all' && a.el.dataset.year !== y));
+      list = lis.filter((li) => !li.hidden);
+      at = replay && playing ? 0 : list.length - 1;
+      if (playing) loop(); else { center(list[at], false); paint(at, false); }
+      if (still) return;
+      list.forEach((li, j) => {
+        const card = li.querySelector('.ws-ticket');
+        const away = Math.abs(j - at);
+        card.classList.remove('is-in');
+        if (away > 4) return; // the rest are off screen
+        card.style.setProperty('--d', `${away * 40}ms`);
+        void card.offsetWidth;
+        card.classList.add('is-in');
+        card.addEventListener('animationend', () => card.classList.remove('is-in'), { once: true });
+      });
+    }),
+  );
+
+  // ---- The pass: tap the middle card (any other card comes to the middle first).
+  const dlg = document.querySelector('dialog.ws-detail');
+  const slot = dlg?.querySelector('[data-ws-ticket]');
+  const photo = dlg?.querySelector('[data-ws-photo]');
+  const cap = dlg?.querySelector('[data-ws-caption]');
+  const count = dlg?.querySelector('[data-ws-count]');
+  let open = () => {};
+  if (dlg && slot && photo && cap && count) {
+    let k = 0;
+    // Long haul: every trip from one year opened (years with three or more).
+    const seen = new Map();
+    const perYear = lis.reduce((m, li) => m.set(li.dataset.year, (m.get(li.dataset.year) || 0) + 1), new Map());
+    const fill = (b, dir) => {
+      const li = b.parentElement;
+      const y = li.dataset.year;
+      if (!seen.has(y)) seen.set(y, new Set());
+      seen.get(y).add(li.dataset.i);
+      // A microtask, so a pass opening right after is already up when the toast shows.
+      if (perYear.get(y) >= LONG_HAUL_MIN && seen.get(y).size === perYear.get(y)) queueMicrotask(() => document.dispatchEvent(new CustomEvent('passport:stamp', { detail: 'long-haul' })));
+      slot.replaceChildren(b.parentElement.querySelector('template').content.cloneNode(true));
+      photo.replaceChildren();
+      if (b.dataset.photo) {
+        const img = document.createElement('img');
+        img.src = b.dataset.photo;
+        img.alt = b.dataset.alt || '';
+        photo.append(img);
+      } else if (drafts) {
+        const blank = document.createElement('span');
+        blank.className = 'ws-blank';
+        blank.textContent = 'Photo to come';
+        photo.append(blank);
+      }
+      photo.hidden = !photo.childElementCount;
+      cap.textContent = b.dataset.caption || '';
+      count.textContent = `${k + 1} of ${list.length}`;
+      dlg.dataset.dir = dir || '';
+      if (dir) {
+        // Stepping: a quick swap. The stub stays torn and the photo doesn't rise again.
+        dlg.classList.add('is-step');
+        dlg.classList.remove('is-swap');
+        void dlg.offsetWidth;
+        dlg.classList.add('is-swap');
+        return;
+      }
+      dlg.classList.remove('is-step', 'is-swap', 'is-showing');
+      void dlg.offsetWidth;
+      dlg.classList.add('is-showing');
+    };
+    const btnAt = (j) => list[j]?.querySelector('.ws-ticket');
+    // What morphs: the print's photo into the big photo, or, with no photo, the print into the pass.
+    const small = (b) => b.querySelector(b.dataset.photo ? '.pr-photo' : '.pr');
+    const big = (b) => (b.dataset.photo ? photo.querySelector('img') || photo : slot);
+    open = (j) => {
+      k = j;
+      const b = btnAt(j);
+      const show = () => {
+        fill(b);
+        if (!dlg.open) dlg.showModal();
+        dlg.focus({ preventScroll: true });
+        // After the pass opens, so its stamp toast shows above it.
+        document.dispatchEvent(new CustomEvent('passport:stamp', { detail: 'boarding-pass' }));
+      };
+      if (!morphs) return show();
+      const card = small(b);
+      card.style.viewTransitionName = 'ws-pass';
+      dlg.classList.add('is-morph');
+      dlg.classList.toggle('is-print', !!b.dataset.photo);
+      let target = slot;
+      const vt = document.startViewTransition(() => { card.style.viewTransitionName = ''; show(); target = big(b); target.style.viewTransitionName = 'ws-pass'; });
+      vt.finished.finally(() => { target.style.viewTransitionName = ''; });
+    };
+    const close = () => {
+      const b = btnAt(k);
+      pick(k, false);
+      const done = () => { dlg.close(); dlg.classList.remove('is-morph', 'is-print', 'is-showing', 'is-step', 'is-swap'); b?.focus({ preventScroll: true }); };
+      if (!morphs || !b) {
+        if (still) return done();
+        dlg.classList.add('is-closing');
+        setTimeout(() => { dlg.classList.remove('is-closing'); done(); }, 160);
+        return;
+      }
+      const card = small(b);
+      const target = big(b);
+      target.style.viewTransitionName = 'ws-pass';
+      const vt = document.startViewTransition(() => { target.style.viewTransitionName = ''; done(); card.style.viewTransitionName = 'ws-pass'; });
+      vt.finished.finally(() => { card.style.viewTransitionName = ''; });
+    };
+    const step = (d) => {
+      if (list.length < 2) return;
+      k = (k + d + list.length) % list.length;
+      dlg.classList.remove('is-morph');
+      fill(btnAt(k), d > 0 ? 'next' : 'prev');
+    };
+    dlg.querySelector('[data-ws-close]')?.addEventListener('click', close);
+    dlg.querySelector('[data-ws-prev]')?.addEventListener('click', () => step(-1));
+    dlg.querySelector('[data-ws-next]')?.addEventListener('click', () => step(1));
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
+    dlg.addEventListener('cancel', (e) => { e.preventDefault(); close(); });
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+    });
+  }
+
+  snap?.addEventListener('click', () => {
+    const j = list.findIndex((li) => li.dataset.i === snap.dataset.i);
+    if (j < 0) return;
+    pick(j, false);
+    open(j);
+  });
+  addEventListener('resize', () => { if (snap && !snap.hidden) hideSnap(); });
+
+  lis.forEach((li) =>
+    li.querySelector('.ws-ticket')?.addEventListener('click', () => {
+      const j = list.indexOf(li);
+      if (j === at && !playing) open(j);
+      else if (j === at) { pick(j, false); open(j); }
+      else pick(j);
+    }),
+  );
+
+  // Start: replay from the first trip, or (reduced motion) show the latest with every route.
+  center(list[at], false);
+  if (playing) loop(); else paint(at, false);
+</script>

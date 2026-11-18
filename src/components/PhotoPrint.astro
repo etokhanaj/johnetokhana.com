@@ -1,0 +1,20 @@
+---
+import type { Photo } from '../data/site';
+
+interface Props {
+  photo: Photo;
+}
+const { photo } = Astro.props;
+const meta = [photo.place, photo.date].filter(Boolean).join(' · ');
+---
+
+<figure class="photo" data-reveal>
+  {
+    photo.src ? (
+      <img class="shot" src={photo.src} alt={photo.alt ?? ''} loading="lazy" decoding="async" style={photo.ratio ? `aspect-ratio:${photo.ratio};object-fit:cover` : undefined} />
+    ) : (
+      <div class="ph"><div class="lab"><span class="chip">Photo to come</span></div></div>
+    )
+  }
+  <figcaption>{photo.caption}{meta && <span class="meta-line"> {meta}</span>}</figcaption>
+</figure>

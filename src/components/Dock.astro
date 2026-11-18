@@ -1,0 +1,16 @@
+---
+// Floating pill on every page: Work | Play, and Ask, which opens the JohnLM
+// chat panel. The command palette has no button here; ⌘K still opens it.
+---
+
+<div class="dock" role="toolbar" aria-label="Site controls">
+  <div class="seg" role="group" aria-label="Mode">
+    <span class="thumb-ind" aria-hidden="true"></span>
+    <button type="button" data-mode-btn="work" aria-pressed="true">Work</button>
+    <button type="button" data-mode-btn="play" aria-pressed="false">Play</button>
+  </div>
+  <button class="kbtn chat-btn" type="button" data-chat-toggle aria-expanded="false" aria-label="Ask JohnLM a question">
+    <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7l-3 2.5v-2.5h0a2 2 0 0 1-1.5-2z" /></svg>
+    <span class="chat-btn-l">Ask</span>
+  </button>
+</div>

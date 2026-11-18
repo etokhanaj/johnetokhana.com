@@ -1,0 +1,23 @@
+---
+// A few headline numbers side by side, in the same white card as the charts.
+interface Item { value: string; label: string }
+interface Props {
+  items: Item[];
+  caption?: string;
+}
+const { items, caption } = Astro.props;
+---
+
+<figure class="frame frame--stats">
+  <div class="frame-box">
+    <dl class="stats-card" style={`--cols:${items.length}`}>
+      {items.map((it) => (
+        <div class="stat">
+          <dt>{it.label}</dt>
+          <dd>{it.value}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+  {caption && <figcaption class="cap">{caption}</figcaption>}
+</figure>

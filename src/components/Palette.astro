@@ -1,0 +1,73 @@
+---
+// ⌘K command palette. The input filters commands; the first row asks JohnLM,
+// which answers in place (see scripts/palette.ts and netlify/functions/ask.mjs).
+import { askSuggestions, person, projects } from '../data/site';
+
+// Page-aware suggested questions, written alongside JohnLM's knowledge.
+const chipFiles = import.meta.glob('../content/johnlm/chips.json', { eager: true, import: 'default' });
+const chips = (Object.values(chipFiles)[0] as Record<string, string[]> | undefined) ?? { home: askSuggestions };
+
+type Cmd = { group: string; label: string; hint?: string; href?: string; action?: string; external?: boolean; disabled?: boolean; icon: string; swatch?: string };
+
+// 16px line icons, one per kind of row
+const icons: Record<string, string> = {
+  ask: '<path d="M2.5 4.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7l-3 2.5v-2.5h0a2 2 0 0 1-1.5-2z"/>',
+  page: '<path d="M4 1.75h5l3 3v9.5H4z"/><path d="M9 1.75v3h3"/>',
+  mail: '<rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="m2.5 4.5 5.5 4 5.5-4"/>',
+  out: '<path d="M5.5 3.5h7v7"/><path d="m12.5 3.5-9 9"/>',
+};
+const cmds: Cmd[] = [
+  { group: 'Pages', label: 'Home', href: '/?mode=work', icon: 'page' },
+  { group: 'Pages', label: 'Play', href: '/?mode=play', icon: 'page' },
+  { group: 'Pages', label: 'Selected work', href: '/?mode=work#work', icon: 'page' },
+  { group: 'Pages', label: 'How I design with AI', href: '/notes-ai/', icon: 'page' },
+  { group: 'Pages', label: 'Writing and media', href: '/writing/', icon: 'page' },
+  ...projects.map((p) => ({ group: 'Case studies', label: p.org, hint: p.years, href: `/work/${p.slug}/`, icon: '', swatch: p.thumb })),
+  { group: 'Contact', label: 'Copy email', hint: person.email, action: 'copy-email', icon: 'mail' },
+  { group: 'Contact', label: 'LinkedIn', href: person.links.linkedin, external: true, icon: 'out' },
+  { group: 'Contact', label: 'GitHub', href: person.links.github, external: true, icon: 'out' },
+];
+const groups = [...new Set(cmds.map((c) => c.group))];
+---
+
+<dialog class="palette" aria-label="Command menu" data-palette data-chips={JSON.stringify(chips)}>
+  <div class="pal">
+    <label class="pal-in">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3" /></svg>
+      <input type="text" placeholder="Search or ask a question" autocomplete="off" spellcheck="false" aria-controls="pal-list" aria-label="Search commands or ask JohnLM" data-pal-input />
+      <kbd>esc</kbd>
+    </label>
+    <div class="pal-list" id="pal-list" role="listbox" data-pal-list>
+      <div class="pal-group" data-pal-askgroup hidden>Ask JohnLM</div>
+      <button type="button" class="pal-item pal-ask" role="option" data-pal-item data-pal-ask data-group="__ask" hidden><svg class="pi" viewBox="0 0 16 16" aria-hidden="true" set:html={icons.ask} /><span class="who">Ask JohnLM</span>&nbsp;<span data-pal-q></span></button>
+      <div class="pal-group" data-pal-chipgroup>Ask JohnLM</div>
+      <button type="button" class="pal-item" role="option" data-pal-item data-pal-resume data-group="Ask JohnLM" hidden><svg class="pi" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 4 2.5 8l4 4" /><path d="M2.5 8h8a3 3 0 0 1 3 3v1" /></svg>Back to your conversation</button>
+      <div data-pal-chips data-icon={icons.ask}></div>
+      {
+        groups.map((g) => (
+          <>
+            <div class="pal-group" data-group={g}>{g}</div>
+            {cmds
+              .filter((c) => c.group === g)
+              .map((c) =>
+                c.href ? (
+                  <a class="pal-item" role="option" href={c.href} target={c.external ? '_blank' : undefined} rel={c.external ? 'noopener' : undefined} data-pal-item data-group={g}>
+                    {c.swatch ? <span class:list={['pi pi-sw', c.swatch]} aria-hidden="true" /> : <svg class="pi" viewBox="0 0 16 16" aria-hidden="true" set:html={icons[c.icon]} />}
+                    {c.label}
+                    {c.hint && <span class="hint">{c.hint}</span>}
+                  </a>
+                ) : (
+                  <button type="button" class="pal-item" role="option" aria-disabled={c.disabled ? 'true' : undefined} data-pal-item data-group={g} data-action={c.action} data-email={c.action === 'copy-email' ? person.email : undefined}>
+                    {c.swatch ? <span class:list={['pi pi-sw', c.swatch]} aria-hidden="true" /> : <svg class="pi" viewBox="0 0 16 16" aria-hidden="true" set:html={icons[c.icon]} />}
+                    {c.label}
+                    {c.hint && <span class="hint">{c.hint}</span>}
+                  </button>
+                ),
+              )}
+          </>
+        ))
+      }
+    </div>
+    <div class="pal-foot"><span data-pal-footleft><span class="pal-keys"><kbd>↑</kbd><kbd>↓</kbd> to move <kbd>↵</kbd> to open</span></span><span data-pal-footright><span data-pal-clock>London</span></span></div>
+  </div>
+</dialog>

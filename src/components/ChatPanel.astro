@@ -1,0 +1,50 @@
+---
+// JohnLM's chat panel, on every page. Hidden until someone asks; see
+// scripts/chat for how it behaves and scripts/ask for the answer engine.
+import { person, projects, sideProjects } from '../data/site';
+
+const chipFiles = import.meta.glob('../content/johnlm/chips.json', { eager: true, import: 'default' });
+const chips = (Object.values(chipFiles)[0] as Record<string, string[]> | undefined) ?? {};
+// What to call the page being read, in the greeting
+const labels = Object.fromEntries([...projects, ...sideProjects].map((p) => [p.slug, p.org]));
+---
+
+<section class="chat" aria-label="JohnLM, questions about John's work" data-chat data-chips={JSON.stringify(chips)} data-labels={JSON.stringify(labels)} data-email={person.email} hidden>
+  <header class="chat-head">
+    <svg class="chat-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c.7 5.4 3.4 8.1 9 9.5-5.6 1.4-8.3 4.1-9 9.5-.7-5.4-3.4-8.1-9-9.5 5.6-1.4 8.3-4.1 9-9.5z" /></svg>
+    <span class="chat-name">JohnLM</span>
+    <button type="button" class="chat-act" data-chat-clear hidden>New chat</button>
+    <button type="button" class="chat-ico" aria-label="Close the chat" title="Close" data-chat-min>
+      <svg class="i-side" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="2" /><path d="M10 3v10M5.5 6.5 7 8 5.5 9.5" /></svg>
+      <svg class="i-sheet" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10.5 12 6.5" /></svg>
+    </button>
+  </header>
+  <div class="chat-body" data-chat-body>
+    <div class="chat-empty" data-chat-empty>
+      <p class="chat-hello" data-chat-hello>Ask me about John's work. I answer from what's on this site.</p>
+      <p class="pa-also">You could ask</p>
+      <div class="pa-follow" data-chat-chips></div>
+    </div>
+    <div class="pa-thread" aria-live="polite" data-chat-thread></div>
+    <div class="chat-end pa-follow" data-chat-end hidden>
+      <p class="pa-also">Take it further</p>
+      <a class="pa-act pa-act--mail" href="#" data-chat-mail>Email this to John</a>
+      <button type="button" class="pa-act pa-act--copy" data-chat-copy>Copy the conversation</button>
+    </div>
+  </div>
+  <form class="chat-form" data-chat-form>
+    <p class="chat-quote" data-chat-quote hidden>
+      <span data-chat-quote-text></span>
+      <button type="button" aria-label="Remove the passage" data-chat-quote-x><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" /></svg></button>
+    </p>
+    <span class="chat-ctx" data-chat-ctx hidden></span>
+    <textarea rows="1" name="q" maxlength="500" autocomplete="off" spellcheck="false" placeholder="Ask a question" aria-label="Ask JohnLM a question" data-chat-input></textarea>
+    <div class="chat-form-row">
+      <button type="submit" class="chat-send" aria-label="Send" disabled data-chat-send>
+        <svg class="i-send" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3.5M3.5 8 8 3.5 12.5 8" /></svg>
+        <svg class="i-stop" viewBox="0 0 16 16" aria-hidden="true"><rect x="4.5" y="4.5" width="7" height="7" rx="1.5" /></svg>
+      </button>
+    </div>
+  </form>
+  <p class="chat-foot" data-chat-left></p>
+</section>

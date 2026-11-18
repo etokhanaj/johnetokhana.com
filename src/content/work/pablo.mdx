@@ -1,0 +1,92 @@
+---
+dek: "A swap had to be easy for newcomers to understand, while giving experienced traders enough detail to judge it before confirming. I designed Pablo's swap flow: the value in dollars and tokens first, with the minimum received, price impact, fees and gas all there before you confirm."
+role: Senior product designer
+status: Shipped
+draft: true
+---
+import Led from '../../components/cs/Led.astro';
+import Figure from '../../components/cs/Figure.astro';
+import Quote from '../../components/cs/Quote.astro';
+import FigureRow from '../../components/cs/FigureRow.astro';
+import Compare from '../../components/cs/Compare.astro';
+
+## Overview
+
+At Advanced Blockchain, a Frankfurt-listed company, I was one of about a dozen designers. As a senior product designer, <Led>I owned the design direction for Pablo, our decentralised exchange</Led>: an app for swapping one crypto token for another with no broker in the middle. This study is about its swap flow.
+
+Pablo ran on Composable Finance, a project for moving money between blockchains. I designed across three of its shipped products, Pablo, Picasso and Angular, used by 10,000 wallets a month between them.
+
+## What's the impact?
+
+- The swap shipped so people could judge a trade before confirming: the value in dollars and tokens first, with the minimum received, price impact, fees and gas one tap below
+- Problems like a balance that's too low show on the Swap button before someone tries
+- Feedback was that it felt simpler than other swaps
+
+I can't isolate the swap's own effect. The numbers I have cover the three products I designed across, Pablo, Picasso and Angular:
+
+- Core transactions that succeeded, from start to on-chain confirmation, rose from 68% to 80%, and the average time people spent on one fell from 5 minutes to 3
+- Of 500 people who started setup, those ready to use the product within seven days rose from 60% to 78%
+- Preventable errors fell from 18 to 10 per 100 starts, and wallet and transaction support tickets fell 25%
+
+## What's the problem?
+
+A swap has to answer two questions for two kinds of people. Most people want to know what they'll get and what it costs. Experienced traders also want to see how the trade will run before they trust it, including which chains their money passes through on the way.
+
+## Challenges
+
+1. **Simplicity and inspection pulled in opposite directions.** Every line of detail competes with the outcome.
+2. **I was designing for the newcomer.** The design lead was thinking about experienced traders, who check how a trade runs before they trust it.
+3. **Crypto amounts are hard to read.** "2,000 DOT" means little until you know what it's worth.
+
+## What did we ship?
+
+I went minimal first. The card showed the rate on one line, and everything else sat behind an expand: what you'd get after fees, how far your trade would move the price, the liquidity provider fee (the cut paid to the people whose tokens fund the pool), and the bridge route, the chains the swap passes through.
+
+<Figure frame="plain" src="/assets/pablo/swap-earlier.jpg" alt="My first version with its details opened: DOT to PICA, total expected after fees, price impact, liquidity provider fee, and the bridge route from Polkadot through Pablo to Picasso" />
+
+The design lead wanted the route in view, not behind a tap. I took both versions to design critique and walked the same swap through each.
+
+<Compare
+  sides={[
+    { label: 'My first version', title: 'The route behind an expand', for: ['The cleanest card', 'What you get and what it costs, first'], against: ['Hides the route, which experienced traders check before they trust a swap'] },
+    { label: "The design lead's case, chosen at critique", title: 'The route in view, below the outcome', for: ['People who just want to swap read the top', 'Traders see where their money goes without a tap'], against: ["Some of the first version's simplicity"], chosen: true },
+  ]}
+/>
+
+The design lead's version won the critique. I don't have a frame of it: the design changed again before launch, and the shipped swap keeps the details collapsed under the rate, with no route row. Other changes:
+
+- **Dollars first.** You type "$500" and see the token amount underneath, with a toggle to flip them.
+- **A floor, not an estimate.** "Total expected after fees" became "Minimum amount received", the least you'll get if the price moves.
+- **The fee as a percentage**, not a token amount.
+- **Market charts beside the swap**, so you can check the price without leaving.
+
+<FigureRow
+  wide
+  items={[
+    { src: '/assets/pablo/swap.jpg', alt: 'The final swap: $500 of KSM to PICA with token amounts underneath, the rate on one collapsed line, and market charts beside it', label: 'Details collapsed, as it opens' },
+    { src: '/assets/pablo/swap-details.jpg', alt: 'The same swap with the details opened: minimum amount received, price impact, liquidity provider fee as a percentage, and which token pays for gas', label: 'Details opened' },
+  ]}
+/>
+
+Two choices sat in small sheets: your slippage tolerance, how far the price may move before the swap stops, and which token pays the network fee, known as gas. Paying gas in a token you already hold means you don't need to buy one first. When something would fail, like a price impact that's too high or a balance that's too low, the Swap button says so instead of letting you try.
+
+<FigureRow
+  wide
+  items={[
+    { src: '/assets/pablo/slippage.jpg', alt: 'Transaction settings: slippage tolerance set to 10%', label: 'Slippage tolerance' },
+    { src: '/assets/pablo/pay-fees-in.jpg', alt: 'Pay for fees in: PICA, KSM or USDC', label: 'Pay network fees in any of three tokens' },
+  ]}
+/>
+
+## How did we do?
+
+The numbers above are results across the three-product suite. They don't isolate the impact of the swap redesign, and I wouldn't claim my screen drove them.
+
+<Quote by="Jon Crabb, design lead who managed me at Advanced Blockchain, on LinkedIn">We worked together on some highly complex projects, but he was able to design solutions quickly and efficiently.</Quote>
+
+## Takeaways
+
+1. Once I saw the design lead was protecting experienced traders, walking one swap through both versions settled the critique. Find what a senior person is protecting before you argue, then let the comparison make the case.
+2. Most people think about money in dollars, not tokens. Show amounts in the unit people already think in.
+
+Outside Pablo, I coached a newer designer on another team. She had good ideas and no story to tell them with, so I asked questions until she found one, instead of presenting for her.

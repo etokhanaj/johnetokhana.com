@@ -1,0 +1,111 @@
+---
+dek: "Staking lets people earn a return on their crypto, but it locks the money up for days, behind validators and rules most people don't understand. I led design for MilkyWay so someone could stake with confidence without becoming an expert first."
+role: Senior product designer, leading design
+status: Shipped
+draft: true
+---
+import Led from '../../components/cs/Led.astro';
+import Figure from '../../components/cs/Figure.astro';
+import Quote from '../../components/cs/Quote.astro';
+import FigureRow from '../../components/cs/FigureRow.astro';
+import Compare from '../../components/cs/Compare.astro';
+
+## Overview
+
+MilkyWay is a liquid staking app in the Cosmos ecosystem. Staking means locking up tokens to help run a network, and earning a return for it. Liquid staking gives you a token back that you can keep using while your stake earns. A validator is one of the operators who run the network, and you stake through one. Unbonding is the wait, often days, before staked tokens can be taken out. From before launch, <Led>I led design for MilkyWay's staking flow, 1-Click staking, withdrawals, validator choice, Lite and Pro modes and reward dashboards.</Led> I worked with an engineer and two product managers, and built MilkyWay's atomic design system.
+
+## What's the impact?
+
+- People could stake without learning the machinery first, and experienced stakers kept the depth they expected
+- Staking BABY held on Babylon went from three separate jobs to one button, with the route still on screen. People who finished with milkBABY in their balance rose from 62% to 74%, comparing four weeks and 400 wallet starts each side
+- More than three in four people took the recommended validator, according to the team's analytics in Mixpanel, and most of the money was staked through Lite
+- Over $800k was staked in the first week, and $30M+ within three months. In crypto, money staked follows incentives and the wider market at least as much as design, so I count those as the protocol's results, not mine
+
+## What's the problem?
+
+Liquid staking is useful and hard to follow: validators, unbonding periods, exchange rates, rewards that build up over days. Most apps show all of it raw and leave you to work it out. With real money involved, confusing design is a financial risk.
+
+## Is this a real problem?
+
+The most common questions from the community and support were the same few: where do I see my stake, when can I claim my rewards, how does unbonding work, and why does my balance look different in another tool. People were leaving the app for outside dashboards just to understand their own money.
+
+Beyond those questions, I had rough usage patterns and the friction we saw in wallet connection and in finding your position. There were no formal user studies and no funnel that could isolate what design changed, so I treated all of it as direction, not proof.
+
+## Challenges
+
+1. **Two audiences pretending to be one.** Experts want density and control. Everyone else wants an app that works like a normal app.
+2. **The default carries their money.** Staking MILK means picking a validator, most people don't know how, and hiding the choice would take control away from experienced stakers.
+3. **Mistakes cost money, and time is invisible.** Actions are often permanent, and unbonding and rewards happen off screen, over days.
+
+## What did we ship?
+
+### One click from Babylon
+
+People holding BABY on Babylon had three separate jobs before they earned anything: bridge it to MilkyWay, stake it, then bring milkBABY back to Babylon to use it there. 1-Click starts all three from one button on the staking form. I designed it, and it shipped.
+
+I kept the route on screen: Bridge, Stake, Return, with a tooltip that says what happens to your BABY at each step. Running the steps took work off people. The route shows where their BABY goes at each step and where milkBABY lands. Software acting for you while showing you what it's doing is the same problem an agentic product has, where the machinery is more powerful and trust is harder to earn.
+
+We compared the four weeks before and after, with 400 wallet starts in each. People who got all the way to milkBABY in their balance rose from 62% to 74%. Submitted transactions that confirmed rose from 92% to 96%, the average time from start to final signature fell from 7 minutes to 5, not counting the chain's own confirmation time, and preventable errors, like the wrong network or too little gas, fell from 20 to 11 per 100 starts.
+
+<Figure video="/assets/milkyway/oneclick-interaction" alt="1-Click on MilkyWay: from the Liquid Staking form, tapping Stake from Babylon (1-Click); the Stake BABY from Babylon window with what you will receive and the stake route Bridge, Stake, Return; hovering the route shows what each step does; tapping Stake 334.10 BABY; then the stake flow's shared Staking and Transaction successful messages" />
+
+### A recommended validator, with the details one tap away
+
+Validator choice is part of staking MILK, MilkyWay's own token. Newcomers can accept the preselected default in one step. The full list, with voting power and expected APR, stays one tap away for people who check.
+
+<Figure src="/assets/milkyway/mw-validators-v2.jpg" alt="Stake MILK validator picker: a searchable list of validators with voting power, your stake and expected APR, the first one selected, with Cancel and Review stake. Validator names are placeholders from the design file." />
+
+### Lite by default, Pro one switch away
+
+My rule for the split: the simple view holds the decision and what follows from it. How much, with whom, what you get back, and what you commit to. The advanced view holds the machinery. The test is whether someone can act correctly from the simple view alone.
+
+I ran workshops, turned them into a full plan, and the team signed off on it.
+
+<Compare
+  sides={[
+    { label: 'Considered', title: 'One middle-of-the-road screen for everyone', for: ['Simplest to build and maintain'], against: ['Too much for newcomers, too shallow for experts'] },
+    { label: 'What we shipped', title: 'Lite by default, Pro on demand', for: ['Lite gets a first-timer staked safely, with the hard choices made', 'Pro shows pools, operators and restaking'], against: ['Two modes to design and keep consistent', 'The step up to Pro can feel like a cliff'], chosen: true },
+  ]}
+/>
+
+<FigureRow
+  wide
+  items={[
+    { src: '/assets/milkyway/mw-grid.jpg', alt: 'Lite: one form to stake, withdraw or claim, with the APR and token price beside it', label: 'Lite' },
+    { src: '/assets/milkyway/mw-detail.jpg', alt: 'Pro: pools, AVS and operators, with your balance and what is restaked beside the form', label: 'Pro' },
+  ]}
+/>
+
+### Your money, inside the app
+
+I brought position, rewards and unbonding into MilkyWay, written in plain words. Unbonding says "claimable in 12 days" instead of protocol terms. I worked on this daily with engineering, checking each screen against the questions people kept asking about their balances.
+
+<Figure src="/assets/milkyway/mw-claim.jpg" alt="MilkyWay claim tab showing amounts claimable in 2, 12 and 23 days" />
+
+### Two ways out
+
+There are two ways to take money out of liquid staking: wait for your stake to unbond, or leave now by swapping on an exchange at the going rate. I designed withdrawal around that choice. The form puts both side by side. Waiting shows how many days and the fee. Leaving now shows the rate you'd swap at on Osmosis and takes you there. A countdown shows when the next unstaking batch goes, so a wait has an end you can see.
+
+<FigureRow
+  wide
+  items={[
+    { src: '/assets/milkyway/mw-withdraw-wait.jpg', alt: 'Withdraw tab with Wait chosen: the days and the fee, a countdown to the next unstaking batch, and Request withdrawal', label: 'Wait' },
+    { src: '/assets/milkyway/mw-withdraw-now.jpg', alt: 'Withdraw tab with Withdraw immediately chosen: a Withdraw on Osmosis card with the current swap rate', label: 'Leave now' },
+  ]}
+/>
+
+## After launch
+
+Two things changed. The app began with liquid staking at the centre. As the company pushed other products, I proposed reworking the navigation, and staking moved down, even though it still carried the most money.
+
+We also ended up with more advanced users than light ones, even though most of the money went through Lite. So we gave them more control over their settings, like choosing which token pays the network fee so they could pay less.
+
+One thing I'd do differently: only 1-Click had a before and after. I shipped the earlier clarity work, the recommended validator and Lite and Pro, on judgement and observed friction, without the measurement to prove it. Next time I'd agree the design numbers before launch, such as how many people who connect a wallet go on to stake, where they drop off at validator choice, and how often they still need outside tools.
+
+<Quote by="Joon Whang, front-end engineer I worked with at Composable Finance and MilkyWay, on LinkedIn">Changes that were introduced in the design during iterations… were never perceived as a bother, but a source of excitement and awe - which was a first for me.</Quote>
+
+## Takeaways
+
+1. When the product runs several steps for someone, keep the route on screen. Less work shouldn't mean less idea of where your money is.
+2. A good default lets beginners act without taking control away from anyone, as long as the details stay one tap away.
+3. Unbonding periods and rewards happen in time people can't see. Write them in units people use, like "claimable in 12 days".

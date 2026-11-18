@@ -1,0 +1,176 @@
+---
+dek: "People with ADHD rarely lack a to-do list. They struggle to start, and to restart when the day falls apart. I co-founded Rivva and led the redesign of its onboarding and Nia, our AI planner: a long setup became a first plan people could act on in their first session."
+role: Co-founder, head of design
+status: Closed cleanly, May 2026
+draft: true
+---
+import Led from '../../components/cs/Led.astro';
+import Figure from '../../components/cs/Figure.astro';
+import FigureRow from '../../components/cs/FigureRow.astro';
+import Quote from '../../components/cs/Quote.astro';
+import Compare from '../../components/cs/Compare.astro';
+import Chart from '../../components/cs/Chart.astro';
+
+## Overview
+
+Rivva planned the day for adults with ADHD. It began as a planner built around energy, doing hard work when you have the most of it. When our strongest sign-ups turned out to have ADHD, the product team rebuilt it for them.
+
+I co-founded Rivva in July 2025, in a team of 12. <Led>I led design and research for Rivva's onboarding, Nia the AI planner, and the Replan and Wind Down flows</Led>, on iOS, Android, web and a browser extension. We shipped to 30+ countries within eight weeks of v1, and closed Rivva in May 2026.
+
+The headline: after the onboarding rebuild I led, the typical new user finished their first task in 9 hours, down from 21, and activation rose from 22% to 34%. These are directional results from weekly groups of about 100 sign-ups, not a controlled test.
+
+## What's the problem?
+
+Most planners assume you can plan and get going on your own. For adults with ADHD, that's exactly what comes and goes. They needed help starting, and help recovering when a plan broke.
+
+Our own numbers hid this. Activation is meant to mark the moment a new user first gets real help from an app, and ours counted people who finished setup. Users grew from 394 to 711 while it fell from 56.8% to 50.2%, and it barely predicted who stayed.
+
+<Chart
+  alt="Users grew from 394 to 711 while activation, measured as finished setup, fell from 56.8% to 50.2%"
+  series={['Earlier', 'Later']}
+  color="#6d3ef0"
+  independent
+  groups={[
+    { name: 'Users', values: [{ v: 394, label: '394' }, { v: 711, label: '711' }] },
+    { name: 'Finished setup', values: [{ v: 56.8, label: '56.8%' }, { v: 50.2, label: '50.2%' }] },
+  ]}
+/>
+
+## Redefining activation
+
+So I looked for the behaviour that did predict who came back. Within 48 hours, a person had three tasks scheduled by Nia, our AI planner, and had finished at least one. People who did this were far more likely to return. That's a correlation, not proof, but strong enough to make it our definition of activation. On it, 22% of new users activated.
+
+I built a shared dashboard in our analytics tool (PostHog) so the team worked from the same numbers, and argued for pausing the sprint's roadmap work to fix onboarding first. We paused it and built to the new definition.
+
+## What did research tell us?
+
+I combined research on executive function, ADHD forums, early-user interviews and four sessions with Aanu Jide-Ojo, a clinical psychologist registered with the UK health regulator (HCPC). The same things kept coming up: a to-do list doesn't help you start, getting things out of your head helps, and once the day derails, people give up on the plan. Aanu reframed it for me: these users need interrupting more than accommodating.
+
+<Figure frame="plain" src="/assets/rivva/research-canvas.jpg" alt="Research canvas: an empathy map surrounded by grouped notes on what users see, say, do, think and feel" />
+
+## When our CTO stepped down
+
+Until we closed, I took on engineering delivery: daily morning syncs instead of twice a week, one shared bug list we prioritised together, and a release held back until scheduling was reliable. The engineers kept the technical decisions.
+
+## What did we ship?
+
+### A first plan in the first session
+
+The old onboarding was a questionnaire of about 23 steps before any help at all. I proposed and led the rebuild. We explored reordering the questionnaire, Nia asking in conversation, Nia suggesting the first task, and connecting a calendar before setup or after a first task. What shipped on 12 March 2026: fewer questions, the sensitive ones optional and private, setup moved into the app as a checklist on Home, and a first plan built from gaps in your calendar and whatever you said out loud. It still asks your age, work and working hours, so it's 13 screens, but you leave with a plan.
+
+<FigureRow
+  items={[
+    { srcs: ['/assets/rivva/s-before-1.jpg', '/assets/rivva/s-before-2.jpg', '/assets/rivva/s-before-3.jpg', '/assets/rivva/s-before-4.jpg', '/assets/rivva/s-before-5.jpg', '/assets/rivva/s-before-6.jpg'], alt: 'The first onboarding: a long questionnaire asking your name, age, why you came, when your workday starts, when you focus best and about your sleep', label: 'Before: about 23 steps, six shown', steps: ['Name', 'Age', 'Why you came', 'Workday', 'Focus time', 'Sleep'], holds: [3.1, 2.8, 5, 4, 5, 4.6] },
+    { srcs: ['/assets/rivva/s-after-1.jpg', '/assets/rivva/s-after-2.jpg', '/assets/rivva/s-after-3.jpg', '/assets/rivva/s-after-4.jpg', '/assets/rivva/s-after-5.jpg', '/assets/rivva/s-after-6.jpg', '/assets/rivva/m-home.jpg'], alt: 'Key steps of the shipped onboarding: your name, an optional and private question about what shapes your days, your calendar, saying what is on your plate, what Nia picked up, your plan, then Home on the first day', label: 'After: 13 screens, seven shown', steps: ['Name', 'What shapes your days, optional', 'Calendar', "Say what's on your plate", 'What Nia picked up', 'Your plan', 'Home'], holds: [3.1, 5, 3.7, 4.5, 4.4, 4, 5] },
+  ]}
+/>
+
+<Compare
+  sides={[
+    { label: 'Before', title: 'Personalise first', for: ['Feels tailored and thorough'], against: ['About 23 steps before any help', 'Half of new users never finished it'] },
+    { label: 'What we shipped', title: 'A usable plan first', for: ['Calendar gaps plus one spoken task, and Nia builds the plan', 'Drives the behaviour that predicted people coming back'], against: ['Less personal on day one', 'Fewer people set up energy'], chosen: true },
+  ]}
+/>
+
+The paywall moved too. I'd first put it before anyone had used Nia, and same-day trial cancellations showed we were asking people to pay for relief they hadn't felt yet. It now came after Nia built your first plan, and I accepted losing people who'd have paid on the promise alone. Both changed together, so I can't split the results between them.
+
+<FigureRow items={[{ proto: 'onboarding', label: 'Rivva onboarding, as shipped' }]} />
+
+We also removed streaks. Adults with ADHD and autistic adults tend to be harder on themselves than their peers, and a streak that resets after one missed day turns ordinary inconsistency into visible failure.
+
+### Nia proposes, you confirm
+
+Nia broke big tasks into steps, replanned the day when something slipped, and turned emails into tasks. I set the rules it followed. Explicit commands act now, and anything Nia suggests asks first. Nothing saves without approval, and every change can be undone. Its voice was short and warm, with no exclamation marks and no blame.
+
+<FigureRow
+  items={[
+    { src: '/assets/rivva/f-nia-before.jpg', alt: 'Earlier Nia: a general assistant greeting with generic prompts and a keyboard', label: 'Earlier: a general assistant' },
+    { src: '/assets/rivva/f-nia-chips.jpg', alt: 'Nia v2: how can I help? with three prompts to start from', label: 'Later: three focused prompts' },
+  ]}
+/>
+
+<Quote who="Rivva onboarding copy">When something shifts, plans slip. That's not on you.</Quote>
+
+I wanted a live waveform while Nia worked. To save engineering time, we shipped a lighter state showing what Nia is really doing, like checking your availability.
+
+### Capture, break down, replan
+
+Say it messy and Nia makes tasks. Hand it a big one and it comes back as steps to approve.
+
+<FigureRow
+  items={[
+    { src: '/assets/rivva/f-capture.jpg', alt: "What's on your plate today? Say it messy and we'll make sense of it, with Tap to speak and Type instead", label: 'Capture' },
+    { src: '/assets/rivva/f-breakdown.jpg', alt: 'Nia breaks a writing task into four steps, each with a time, with Cancel and Approve', label: 'Break down' },
+  ]}
+/>
+
+Replan was for when the day fell apart. My first version led with your usable time left and previewed every task it would move. The shipped one leads with what you need right now and shows a short reset instead. With no easy fix, Nia said so:
+
+<Quote who="Nia, when a replan has no easy answer">I couldn't find a lighter swap right now, so I made this task easier to start.</Quote>
+
+<FigureRow
+  items={[
+    { srcs: ['/assets/rivva/f-replan-v1-1.jpg', '/assets/rivva/f-replan-v1-2.jpg'], alt: 'The first Replan: usable time left and two options, then a preview of every task it would move', label: 'First version' , steps: ["Usable time left", "Every change previewed"], holds: [3.9, 5] },
+    { srcs: ['/assets/rivva/f-replan-s-1.jpg', '/assets/rivva/f-replan-s-2.jpg', '/assets/rivva/f-replan-s-3.jpg'], alt: 'Replan as shipped: what do you need right now, a rebuilt day or a quick win, then reworking your day, then a short reset to apply', label: 'Replan, shipped', steps: ['What do you need?', 'Reworking your day', 'Your reset'], holds: [4.5, 1.8, 5] },
+  ]}
+/>
+
+<FigureRow
+  items={[
+    { video: '/assets/rivva/replan-interaction', alt: "Replan on Rivva: from Home, the What do you need right now sheet with Rebuild my day chosen; tapping Preview changes; Reworking your day; Here's your reset, with what stays today and what moves off; tapping Apply new plan; and back to Home" },
+  ]}
+/>
+
+Wind Down closed the day: what you got done, then what was left. My first version went one task at a time. The shipped one is a stack of cards: swipe right for done, left to reschedule.
+
+<FigureRow
+  items={[
+    { srcs: ['/assets/rivva/f-wd-v1-1.jpg', '/assets/rivva/f-wd-v1-2.jpg', '/assets/rivva/f-wd-v1-3.jpg'], alt: 'The first Wind Down: one task at a time with Reschedule and Mark as done, suggested times, and No time found when nothing fits', label: 'First version' , steps: ["One task at a time", "Suggested times", "No time found"], holds: [3.1, 3.4, 3.4] },
+    { srcs: ['/assets/rivva/f-wd-1.jpg', '/assets/rivva/f-wd-2.jpg', '/assets/rivva/f-wd-3.jpg', '/assets/rivva/f-wd-4.jpg'], alt: 'Wind Down as shipped: what you got done today, swipe left to reschedule and right for done, a task card, then you are all set', label: 'Wind Down, shipped', steps: ['What you got done', 'Swipe to sort', 'A card', 'All set'], holds: [3.8, 3.9, 2.6, 2.8] },
+  ]}
+/>
+
+The same loop ran on the web and in a browser extension that made every new tab "next up". One design system covered all three, shared parts with small changes per platform, which suited a small team. At scale, I'd first name colours by their job, like "warning" rather than "orange".
+
+<FigureRow
+  wide
+  items={[
+    { src: '/assets/rivva/web-home.jpg', alt: "Rivva's web app home: up next, the rest of today, and an energy curve", label: 'Web' },
+    { src: '/assets/rivva/ext-newtab.jpg', alt: 'The browser extension: a new tab showing the next task, with Start focus and Mark done', label: 'Every new tab' },
+  ]}
+/>
+
+## How did we do?
+
+- Activation went from 22% to 34% after the rebuild
+- Over the period I worked on it, sign-up to trial went from 51% to 60%, and trial to paid from 18.5% to 23.5%
+- 200 paying subscribers and 53% monthly renewal, with no paid marketing
+
+These were weekly groups of about a hundred sign-ups, not a controlled test, so I read the direction, not the size: 22% to 34% is roughly 22 people becoming 34.
+
+<Chart
+  alt="Before and after the onboarding rebuild: activation rose from 22% to 34%, and the median time to a first finished task fell from 21 hours to 9"
+  series={['Before the rebuild', 'After']}
+  color="#6d3ef0"
+  independent
+  groups={[
+    { name: 'Activation', values: [{ v: 22, label: '22%' }, { v: 34, label: '34%' }] },
+    { name: 'Hours to first finished task', values: [{ v: 21, label: '21h' }, { v: 9, label: '9h' }] },
+  ]}
+/>
+
+## What I got wrong
+
+I designed gentle reminders, the kind I'd want. Aanu told me to start insistent and walk it back. We shipped insistent reminders, capped at three to four a day, and I followed four people afterwards: an early lift that tailed off for those with the most persistent difficulties.
+
+Moving setup into the app also meant fewer people set up energy, Rivva's original idea. Next time I'd have Nia ask about it after someone's first finished task.
+
+## Why it closed
+
+People who got a plan from Nia and acted on it were far more likely to come back. What we couldn't find was a big enough market at the price people would pay, and general AI assistants kept pushing that price down. So we closed it cleanly rather than spend other people's money proving a point.
+
+## Takeaways
+
+1. Measure the behaviour that predicts staying, not the easiest step to count.
+2. Ask the specialist before you design the default.
+3. Retention and willingness to pay are separate bets. Test what people will pay as early as you test whether they return.

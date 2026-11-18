@@ -1,0 +1,131 @@
+---
+// Case study page: one 640px column. Title and date in grey mono, a one-line
+// dek, a meta line, the painted hero (the only decoration), then the body.
+import type { MarkdownHeading } from 'astro';
+import Base from './Base.astro';
+import AskInline from '../components/AskInline.astro';
+import type { Project } from '../data/site';
+
+interface Props {
+  project: Project;
+  data: { dek: string; role: string; team?: string; status?: string; draft: boolean; gallery?: string[] };
+  headings: MarkdownHeading[];
+  next: Project[];
+}
+
+const { project, data, next } = Astro.props;
+const hero = data.gallery?.[0] ?? project.image;
+const host = project.site ? new URL(project.site).host : (project.url ?? project.org.toLowerCase().replace(/\s+/g, ''));
+---
+
+<Base title={`${project.wordmark ?? project.org} · John Etokhana`} description={data.dek} bodyClass="cs" type="article" image={`/og/${project.slug}.jpg`}>
+  <main class={`pb${project.bg}`}>
+    <a class="cs-back" href="/?mode=work#work">← John Etokhana</a>
+    <div class="cs-title"><h1>{project.org}: {project.title.replace(/^[^:]+:\s*/, '')}</h1> ({project.years})</div>
+    <p class="cs-dek">{data.dek}</p>
+    {project.results && (
+      <ul class="cs-results" aria-label="Results">
+        {project.results.map((r) => <li>{r}</li>)}
+      </ul>
+    )}
+
+    <div class="cs-hero-stage">
+      <div class:list={['stage', `pb${project.bg}`]}>
+        {
+          project.heroFrame === 'phone' ? (
+            <div class="phone-stage device">
+              <div class="scr"><img src={hero} alt={project.imageAlt} decoding="async" fetchpriority="high" /></div>
+            </div>
+          ) : (
+            <div class="window">
+              <div class="bar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="t">{host}</span></div>
+              <div class="body">
+                {hero ? <img src={hero} alt={project.imageAlt} decoding="async" fetchpriority="high" /> : <div class="win-ph">{project.imageAlt}: image to come</div>}
+              </div>
+            </div>
+          )
+        }
+      </div>
+    </div>
+
+    <AskInline page={project.slug} org={project.org} />
+
+    <article class="cs-body">
+      <slot />
+    </article>
+
+    <nav class="cs-end" aria-label="More work">
+      <a class="home" href="/?mode=work#work">← Take me home</a>
+      <a class="next" href={`/work/${next[0].slug}/`}>Next: {next[0].wordmark ?? next[0].org} →</a>
+    </nav>
+  </main>
+  <dialog class="zoom" aria-label="Enlarged screen"><img alt="" /></dialog>
+</Base>
+
+<script>
+  import { initProtos } from '../scripts/proto';
+  initProtos();
+
+  // Click any screen in a case study to see it full size; click or Esc closes.
+  const dlg = document.querySelector<HTMLDialogElement>('dialog.zoom');
+  const big = dlg?.querySelector('img');
+  document.querySelectorAll<HTMLImageElement>('.cs-body .frame img:not(.proto-scr)').forEach((img) => {
+    img.addEventListener('click', () => {
+      if (!dlg || !big) return;
+      const shown = img.closest('[data-seq]')?.querySelector<HTMLImageElement>('img.on') ?? img;
+      big.src = shown.currentSrc || shown.src;
+      big.alt = shown.alt;
+      dlg.showModal();
+    });
+  });
+  dlg?.addEventListener('click', () => dlg.close());
+
+  // Sequences: several screens crossfade in one slot, like a short screen
+  // recording. Only while on screen and the tab is visible; reduced motion
+  // keeps the first screen. Slots in one row advance together. Named steps
+  // under a slot mark the screen showing, and picking one holds it a while.
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const seqs = [...document.querySelectorAll<HTMLElement>('[data-seq]')];
+  const held = new WeakMap<HTMLElement, number>();
+  const stepsOf = (s: HTMLElement) => [...(s.closest('figure')?.querySelectorAll<HTMLButtonElement>('[data-steps] button') ?? [])];
+  const show = (s: HTMLElement, n: number) => {
+    s.querySelectorAll('img').forEach((im, k) => im.classList.toggle('on', k === n));
+    stepsOf(s).forEach((b, k) => {
+      b.classList.toggle('on', k === n);
+      b.setAttribute('aria-pressed', String(k === n));
+    });
+  };
+  seqs.forEach((s) =>
+    stepsOf(s).forEach((b, k) =>
+      b.addEventListener('click', () => {
+        held.set(s, Date.now() + 8000);
+        show(s, k);
+      }),
+    ),
+  );
+  // Each strip runs on its own clock: a screen stays up for its hold (data-holds,
+  // seconds). Hover or focus pauses a strip; it only moves while on screen.
+  if (!still && seqs.length) {
+    const visible = new Set<HTMLElement>();
+    const paused = new Set<HTMLElement>();
+    const io = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? visible.add(e.target as HTMLElement) : visible.delete(e.target as HTMLElement))), { threshold: 0.35 });
+    seqs.forEach((s) => {
+      io.observe(s);
+      const fig = s.closest('figure') ?? s;
+      fig.addEventListener('pointerenter', () => paused.add(s));
+      fig.addEventListener('pointerleave', () => paused.delete(s));
+      fig.addEventListener('focusin', () => paused.add(s));
+      fig.addEventListener('focusout', () => paused.delete(s));
+      const holds = (s.dataset.holds ?? '').split(',').map(Number).filter((n) => n > 0);
+      const tick = () => {
+        const imgs = [...s.querySelectorAll('img')];
+        const i = imgs.findIndex((im) => im.classList.contains('on'));
+        const moving = !document.hidden && visible.has(s) && !paused.has(s) && (held.get(s) ?? 0) <= Date.now();
+        const next = moving ? (i + 1) % imgs.length : i;
+        if (moving) show(s, next);
+        window.setTimeout(tick, (holds[next] ?? 3) * 1000);
+      };
+      window.setTimeout(tick, (holds[0] ?? 3) * 1000);
+    });
+  }
+</script>

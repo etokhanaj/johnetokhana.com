@@ -1,0 +1,19 @@
+{
+  "terms": [
+    "Example Founder",
+    "Example Revenue Figure"
+  ],
+  "ceo": [
+    "\\bExample\\b",
+    "Founder"
+  ],
+  "team": [
+    "Example Founder",
+    "Example Engineer"
+  ],
+  "retired": [
+    "Example Retired Number"
+  ],
+  "sample": "Example Founder",
+  "scan": []
+}

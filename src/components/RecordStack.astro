@@ -1,0 +1,296 @@
+---
+// Heavy rotation as one object: a stack of five record sleeves (the top five
+// covers) with the front record slid part-way out. It shares the glass
+// folder's gesture, something sliding out of its holder, and its 720-unit stage.
+//
+// Motion:
+// - Idle: once per shared loop (see scripts/idle-loop), in the folder's rest,
+//   the stack rotates. The record tucks in, the front sleeve swings out to the
+//   right and round to the back in one arc, the next sleeve steps forward, and
+//   its record slides out, turns for a moment and slides back.
+// - Hover or keyboard focus on the link around it: the record slides out and
+//   spins for as long as the pointer stays. The sleeve leans back a touch as
+//   the record leaves, and the light on the vinyl follows the pointer.
+// - Live: when the page says a track is playing right now (the `rs:live`
+//   event), that cover comes to the front, the sticker reads "Now" and pulses,
+//   and the record stays out, spinning.
+// - Reduced motion: nothing moves; hover brightens the stack a little.
+// The page can also hand over fresh covers with the `rs:covers` event.
+interface Props {
+  covers: (string | undefined)[];
+}
+const covers = Astro.props.covers.filter((c): c is string => !!c).slice(0, 5);
+---
+
+<span class="rs" data-rs aria-hidden="true">
+  {covers.map((src, i) => (
+    <span class="rs-sleeve" data-pos={i}><img src={src} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></span>
+  ))}
+  <span class="rs-vinyl" data-rs-vinyl>
+    <span class="rs-turn" data-rs-turn>
+      <span class="rs-disc"></span>
+      <span class="rs-label"><img src={covers[0]} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-rs-label /></span>
+    </span>
+    <span class="rs-sheen"></span>
+    <span class="rs-hole"></span>
+  </span>
+  <span class="rs-tag" data-rs-tag><span data-rs-rank>No.1</span></span>
+</span>
+
+<style>
+  .rs { position: absolute; inset: 0; display: block; container-type: size; --u: calc(100cqh / 720); }
+  .rs span { display: block; position: absolute; }
+
+  /* Sleeves: the front one at the left edge, the rest stepped up and right behind it. */
+  .rs-sleeve {
+    --p: 0; left: 0; top: calc(190 * var(--u)); width: calc(480 * var(--u)); height: calc(480 * var(--u)); border-radius: calc(7 * var(--u)); overflow: hidden; background: #2a2a2d; z-index: calc(10 - var(--p));
+    transform: translate(calc(var(--p) * 13 * var(--u)), calc(var(--p) * -13 * var(--u))); transform-origin: 20% 100%; rotate: 0deg;
+    box-shadow: 0 calc(8 * var(--u)) calc(14 * var(--u)) rgba(0, 0, 0, 0.22), 0 0 0 calc(1 * var(--u)) rgba(0, 0, 0, 0.18);
+    transition: transform 420ms var(--ease-out), rotate 380ms var(--ease-pop);
+  }
+  .rs-sleeve[data-pos='0'] { --p: 0; z-index: 20; }
+  .rs-sleeve[data-pos='1'] { --p: 1; }
+  .rs-sleeve[data-pos='2'] { --p: 2; }
+  .rs-sleeve[data-pos='3'] { --p: 3; }
+  .rs-sleeve[data-pos='4'] { --p: 4; }
+  .rs-sleeve img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  /* Printed card: a soft light across it, and the shadow of its opening on the right. */
+  .rs-sleeve::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, rgba(255, 255, 255, 0.16) 0%, transparent 32%, transparent 78%, rgba(0, 0, 0, 0.3) 100%); }
+  /* Sleeves further back sit in a little more shade (a fading layer, cheaper than a filter). */
+  .rs-sleeve::before { content: ''; position: absolute; inset: 0; z-index: 1; background: #000; opacity: calc(var(--p) * 0.09); transition: opacity 420ms var(--ease); }
+  /* The front sleeve leans back a touch as its record leaves. */
+  .rs.is-out .rs-sleeve[data-pos='0'] { rotate: -1.5deg; }
+
+  /* The record lives inside the front sleeve: over the stack, under that sleeve. */
+  .rs-vinyl { left: calc(142 * var(--u)); top: calc(204 * var(--u)); width: calc(452 * var(--u)); height: calc(452 * var(--u)); border-radius: 50%; z-index: 15; transform: translateX(0); transition: transform 300ms var(--ease-out); box-shadow: calc(4 * var(--u)) calc(6 * var(--u)) calc(12 * var(--u)) rgba(0, 0, 0, 0.3); }
+  /* Out: 380ms with the folder's overshoot when the pointer asks; the idle run takes the folder's 0.63s. */
+  .rs.is-out .rs-vinyl { transform: translateX(calc(196 * var(--u))); transition: transform 380ms var(--ease-pop); }
+  .rs.is-idle.is-out .rs-vinyl { transition-duration: 0.63s; }
+  .rs.is-in .rs-vinyl { transform: translateX(calc(-124 * var(--u))); transition: transform 220ms var(--ease-in-out); }
+  .rs.is-swap .rs-vinyl { visibility: hidden; }
+  .rs-turn { inset: 0; border-radius: 50%; }
+  .rs-disc { inset: 0; border-radius: 50%; background: radial-gradient(closest-side, #232325 0 40%, #0f0f10 40.6% 55%, #1c1c1e 55.4% 56.2%, #0f0f10 56.6% 70%, #1c1c1e 70.4% 71.2%, #0f0f10 71.6% 85%, #1c1c1e 85.4% 86.2%, #0f0f10 86.6% 97%, #060606 97.6% 100%); }
+  .rs-label { left: 50%; top: 50%; width: calc(172 * var(--u)); height: calc(172 * var(--u)); margin: calc(-86 * var(--u)) 0 0 calc(-86 * var(--u)); border-radius: 50%; overflow: hidden; background: #f2c14c; }
+  .rs-label img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  /* Light on the vinyl stays put while the record turns under it. */
+  .rs-sheen { inset: 0; border-radius: 50%; pointer-events: none; rotate: 0deg; transition: rotate 400ms var(--ease-out); background: conic-gradient(from 30deg, transparent 0 7%, rgba(255, 255, 255, 0.22) 12%, transparent 18% 57%, rgba(255, 255, 255, 0.15) 62%, transparent 68% 100%); -webkit-mask-image: radial-gradient(closest-side, transparent 39%, #000 40%); mask-image: radial-gradient(closest-side, transparent 39%, #000 40%); }
+  .rs-hole { left: 50%; top: 50%; width: calc(16 * var(--u)); height: calc(16 * var(--u)); margin: calc(-8 * var(--u)) 0 0 calc(-8 * var(--u)); border-radius: 50%; background: #111214; box-shadow: inset 0 0 0 calc(2 * var(--u)) rgba(255, 255, 255, 0.2); }
+
+  /* A hype sticker on the front sleeve, in the folder's yellow and hand. */
+  .rs-tag { left: calc(-22 * var(--u)); top: calc(158 * var(--u)); width: calc(112 * var(--u)); height: calc(112 * var(--u)); border-radius: 50%; z-index: 25; background: #ffdd61; display: grid !important; place-items: center; transform: rotate(-12deg); box-shadow: 0 calc(4 * var(--u)) calc(8 * var(--u)) rgba(0, 0, 0, 0.25), inset 0 0 0 calc(2 * var(--u)) rgba(255, 255, 255, 0.45); }
+  .rs-tag span { position: static; font: 400 calc(44 * var(--u)) / 1 'Covered By Your Grace', 'Bradley Hand', cursive; color: #2b2622; white-space: nowrap; }
+  .rs-tag.is-pop { animation: rs-pop 320ms var(--ease-pop); }
+  .rs.is-live .rs-tag { background: #ff6a2b; }
+  .rs.is-live .rs-tag span { color: #fff; }
+  /* Live: a slow ring off the sticker, so it reads as happening now. */
+  .rs.is-live .rs-tag::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: calc(3 * var(--u)) solid #ff6a2b; animation: rs-live 2.4s var(--ease-out) infinite; }
+  @keyframes rs-live { 0% { transform: scale(1); opacity: 0.7; } 70%, 100% { transform: scale(1.55); opacity: 0; } }
+  @keyframes rs-pop { 0% { transform: rotate(-12deg) scale(0.6); } 100% { transform: rotate(-12deg) scale(1); } }
+
+  /* Reduced motion: nothing moves. The pointer gets a gentle brightening instead. */
+  .rs { transition: filter 200ms var(--ease); }
+  @media (prefers-reduced-motion: reduce) {
+    .rs-sleeve, .rs-sleeve::before, .rs-vinyl, .rs-sheen { transition: none !important; }
+    .rs.is-out .rs-sleeve[data-pos='0'] { rotate: 0deg; }
+    .rs-tag.is-pop, .rs.is-live .rs-tag::after { animation: none; }
+    .rs.is-hot { filter: brightness(1.07); }
+  }
+</style>
+
+<script>
+  import { untilPhase } from '../scripts/idle-loop';
+
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const REV = 1800; // 33 1/3 rpm
+  const AT = 10500; // where in the shared loop this plays: in the folder's rest
+  const SHOW = 2200; // how long the new record stays out on an idle run
+  const ARC = 320; // each half of the front sleeve's swing to the back
+
+  document.querySelectorAll<HTMLElement>('[data-rs]').forEach((rs) => {
+    const turn = rs.querySelector<HTMLElement>('[data-rs-turn]');
+    const vinyl = rs.querySelector<HTMLElement>('[data-rs-vinyl]');
+    const sheen = rs.querySelector<HTMLElement>('.rs-sheen');
+    const label = rs.querySelector<HTMLImageElement>('[data-rs-label]');
+    const tag = rs.querySelector<HTMLElement>('[data-rs-tag]');
+    const rank = rs.querySelector<HTMLElement>('[data-rs-rank]');
+    const sleeves = [...rs.querySelectorAll<HTMLElement>('.rs-sleeve')];
+    const host = rs.closest<HTMLElement>('a, button') ?? rs;
+    if (!turn || !vinyl || !label || !sleeves.length) return;
+    const n = sleeves.length;
+    const front = () => sleeves.find((s) => s.dataset.pos === '0')!;
+    let live = false;
+
+    const stamp = () => {
+      if (rank) rank.textContent = live ? 'Now' : `No.${sleeves.indexOf(front()) + 1}`;
+      if (!tag || still) return;
+      tag.classList.remove('is-pop');
+      void tag.offsetWidth;
+      tag.classList.add('is-pop');
+    };
+    const dress = () => { const img = front().querySelector('img'); if (img) label.src = img.src; };
+
+    // The page hands over fresh covers (top five), or says a track is playing right now.
+    let goLive = () => {};
+    rs.addEventListener('rs:covers', (e) => {
+      const list = (e as CustomEvent<string[]>).detail ?? [];
+      sleeves.forEach((s, i) => { const img = s.querySelector('img'); if (img && list[i]) img.src = list[i]; });
+      dress();
+    });
+    rs.addEventListener('rs:live', (e) => {
+      const cover = (e as CustomEvent<string>).detail;
+      const img = front().querySelector('img');
+      if (!cover || !img) return;
+      img.src = cover;
+      live = true;
+      rs.classList.add('is-live');
+      dress();
+      stamp();
+      goLive();
+    });
+
+    if (still) {
+      // No movement: just a cue that the entry is under the pointer.
+      host.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') rs.classList.add('is-hot'); });
+      host.addEventListener('pointerleave', () => rs.classList.remove('is-hot'));
+      return;
+    }
+
+    const spin = turn.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: REV, iterations: Infinity });
+    spin.playbackRate = 0;
+    let rate = 0;
+    let raf = 0;
+    const ramp = (to: number, ms: number) => {
+      cancelAnimationFrame(raf);
+      const from = rate;
+      const t0 = performance.now();
+      const tick = (now: number) => {
+        const k = Math.min(1, (now - t0) / ms);
+        rate = from + (to - from) * (1 - Math.pow(1 - k, 3));
+        spin.playbackRate = rate;
+        if (k < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+    const out = () => { rs.classList.remove('is-in'); rs.classList.add('is-out'); ramp(1, 900); };
+    const back = () => { rs.classList.remove('is-out', 'is-in'); ramp(0, 1500); };
+
+    // Rotate the stack. The record tucks in; the front sleeve swings out to the
+    // right and round to the back in one arc, and goes behind the others at the
+    // top of the swing, where it is moving fastest and overlaps them least.
+    // A swap always runs to its end, so nothing is ever left half way; `after`
+    // says what happens next, and a pointer arriving mid-swap just hurries it.
+    let swapping = false;
+    let hurry = 1;
+    let after: () => void = () => {};
+    let part: Animation | null = null;
+    const swap = (then: () => void) => {
+      after = then;
+      if (swapping) return;
+      if (n < 2) { after(); return; }
+      swapping = true;
+      const leaving = front();
+      const u = rs.clientHeight / 720;
+      const rest = 'translate(0px, 0px) rotate(0deg) scale(1)';
+      const apex = `translate(${390 * u}px, ${-34 * u}px) rotate(7deg) scale(0.97)`;
+      const tucked = `translate(${(n - 1) * 13 * u}px, ${-(n - 1) * 13 * u}px) rotate(0deg) scale(1)`;
+      rs.classList.remove('is-out');
+      rs.classList.add('is-in');
+      ramp(0, 400);
+      const done = () => {
+        part = null;
+        rs.classList.remove('is-swap', 'is-in');
+        requestAnimationFrame(() => { leaving.style.transition = ''; });
+        swapping = false;
+        hurry = 1;
+      };
+      window.setTimeout(() => {
+        rs.classList.add('is-swap');
+        leaving.style.transition = 'none'; // the arc below moves it; its own step transition would fight the landing
+        part = leaving.animate([{ transform: rest }, { transform: apex }], { duration: ARC, easing: 'cubic-bezier(0.55, 0, 1, 0.45)', fill: 'forwards' });
+        part.playbackRate = hurry;
+        part.finished.then(() => {
+          sleeves.forEach((s) => { s.dataset.pos = String((Number(s.dataset.pos) + n - 1) % n); });
+          dress();
+          stamp();
+          const first = part;
+          part = leaving.animate([{ transform: apex }, { transform: tucked }], { duration: ARC, easing: 'cubic-bezier(0, 0.55, 0.45, 1)' });
+          first?.cancel();
+          part.playbackRate = hurry;
+          return part.finished;
+        }).then(() => { done(); after(); }).catch(done);
+      }, 220 / hurry);
+    };
+
+    // Idle: one swap per loop, only while on screen and nobody is pointing at it.
+    let seen = false;
+    let held = false;
+    let idle = 0;
+    const queue = () => {
+      clearTimeout(idle);
+      if (!seen || held || live) return;
+      idle = window.setTimeout(() => {
+        rs.classList.add('is-idle');
+        swap(() => {
+          out();
+          idle = window.setTimeout(() => { back(); rs.classList.remove('is-idle'); queue(); }, SHOW);
+        });
+      }, untilPhase(AT));
+    };
+    const settle = () => { rs.classList.remove('is-idle'); if (held || live) out(); else back(); };
+    goLive = () => { clearTimeout(idle); if (swapping) after = settle; else if (seen) out(); };
+    new IntersectionObserver(([e]) => {
+      seen = e.isIntersecting && e.intersectionRatio >= 0.6;
+      if (seen) { if (live) out(); else queue(); return; }
+      clearTimeout(idle);
+      if (swapping) after = settle; else if (!held) { back(); rs.classList.remove('is-idle'); }
+    }, { threshold: [0, 0.6] }).observe(rs);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) return queue();
+      clearTimeout(idle);
+      if (swapping) after = settle; else if (!held && !live) back();
+    });
+
+    // The pointer: the record comes out and spins while it stays.
+    const hold = () => {
+      held = true;
+      clearTimeout(idle);
+      rs.classList.remove('is-idle');
+      if (swapping) { after = settle; hurry = 2.5; if (part) part.playbackRate = hurry; } else out();
+    };
+    const release = () => {
+      if (!held) return;
+      held = false;
+      if (sheen) sheen.style.rotate = '';
+      if (swapping) after = settle; else if (!live) back();
+      queue();
+    };
+    host.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') hold(); });
+    host.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') release(); });
+    host.addEventListener('focus', () => { if (host.matches(':focus-visible')) hold(); });
+    host.addEventListener('blur', release);
+
+    // The light on the vinyl turns to face the pointer. The sheen's own bright
+    // band sits 73 degrees round from the top, so that is taken off.
+    if (fine && sheen) {
+      let pending: PointerEvent | null = null;
+      let frame = 0;
+      let calm = 0;
+      host.addEventListener('pointermove', (e) => {
+        if (!held || e.pointerType !== 'mouse') return;
+        pending = e;
+        if (frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          if (!pending) return;
+          const r = vinyl.getBoundingClientRect();
+          const deg = (Math.atan2(pending.clientX - (r.left + r.width / 2), -(pending.clientY - (r.top + r.height / 2))) * 180) / Math.PI;
+          sheen.style.transition = 'rotate 120ms linear';
+          sheen.style.rotate = `${(deg - 73).toFixed(1)}deg`;
+          clearTimeout(calm);
+          calm = window.setTimeout(() => { sheen.style.transition = ''; }, 160); // so leaving eases it home slowly
+        });
+      });
+    }
+  });
+</script>

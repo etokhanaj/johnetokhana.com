@@ -1,0 +1,23 @@
+---
+import { getCollection, render } from 'astro:content';
+import CaseStudy from '../../layouts/CaseStudy.astro';
+import { projects, sideProjects } from '../../data/site';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('work');
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+
+const index = projects.findIndex((p) => p.slug === entry.id);
+const side = sideProjects.find((p) => p.slug === entry.id);
+if (index === -1 && !side) throw new Error(`No project card in src/data/site.ts for "${entry.id}"`);
+const project = side ?? projects[index];
+const next = side ? projects.slice(0, 3) : [1, 2, 3].map((n) => projects[(index + n) % projects.length]);
+---
+
+<CaseStudy project={project} data={entry.data} headings={headings} next={next}>
+  <Content />
+</CaseStudy>

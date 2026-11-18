@@ -1,0 +1,82 @@
+---
+// Screens side by side in one grey frame, each with a short label.
+// Phone screens by default, each inside the iPhone frame; `wide` for desktop screens.
+// `proto` puts a tappable prototype in the frame instead (src/data/protos.json).
+import protos from '../../data/protos.json';
+
+interface Item {
+  src?: string;
+  srcs?: string[]; // several screens that crossfade in one slot
+  video?: string;
+  alt?: string;
+  label?: string;
+  sheet?: boolean; // a sheet captured without the status bar: it sits below it, as on a phone
+  steps?: string[]; // with srcs: a name per screen; a bar per screen marks the one showing, and each can be picked
+  proto?: keyof typeof protos;
+  holds?: number[]; // with srcs: seconds each screen stays up, measured from what there is to read
+}
+interface Props {
+  items: Item[];
+  caption?: string;
+  wide?: boolean;
+}
+const { items, caption, wide = false } = Astro.props;
+---
+
+<figure class:list={['frame', 'frame--row', wide && 'frame--wide-row']}>
+  <div class="frame-box">
+    <div class="frame-row" style={`--cols:${items.length}`}>
+      {
+        items.map((it) => {
+          const p = it.proto ? protos[it.proto] : null;
+          const first = p ? p.screens.find((x) => x.id === p.start) : null;
+          const media = p && first ? (
+            <span class="proto" data-proto={JSON.stringify(p)} data-base={p.base} role="group" aria-label={`Interactive prototype: ${p.name}`}>
+              <span class="proto-stage" data-proto-stage>
+                <img class="proto-scr" src={`${p.base}${first.id}.jpg`} alt={first.alt} draggable="false" />
+              </span>
+              <span class="proto-hots" data-proto-hots></span>
+            </span>
+          ) : it.video ? (
+            <video autoplay muted loop playsinline preload="metadata" poster={`${it.video}-poster.jpg`} aria-label={it.alt}>
+              <source src={`${it.video}.mp4`} type="video/mp4" />
+              <source src={`${it.video}.webm`} type="video/webm" />
+            </video>
+          ) : it.srcs ? (
+            <span class="seq" data-seq data-holds={it.holds?.join(',')}>
+              {it.srcs.map((src, i) => (
+                <img src={src} alt={i === 0 ? it.alt ?? '' : ''} aria-hidden={i === 0 ? undefined : 'true'} class:list={[i === 0 && 'on']} loading="lazy" decoding="async" />
+              ))}
+            </span>
+          ) : (
+            <img src={it.src} alt={it.alt ?? ''} loading="lazy" decoding="async" />
+          );
+          return (
+            <figure>
+              {wide ? media : <span class="device"><span class:list={['scr', it.sheet && 'scr--sheet']}>{media}</span></span>}
+              {(it.label || it.steps) && (
+                <figcaption>
+                  {it.label && <span class="row-label">{it.label}</span>}
+                  {p && (
+                    <>
+                      <button type="button" class="proto-restart" data-proto-restart hidden>Start again</button>
+                      <span class="sr-only" aria-live="polite" data-proto-live></span>
+                    </>
+                  )}
+                  {it.steps && (
+                    <span class="steps" data-steps>
+                      {it.steps.map((s, i) => (
+                        <button type="button" class:list={[i === 0 && 'on']} aria-pressed={i === 0 ? 'true' : 'false'} aria-label={s} title={s}></button>
+                      ))}
+                    </span>
+                  )}
+                </figcaption>
+              )}
+            </figure>
+          );
+        })
+      }
+    </div>
+  </div>
+  {caption && <figcaption class="cap">{caption}</figcaption>}
+</figure>

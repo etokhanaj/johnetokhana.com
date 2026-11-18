@@ -1,0 +1,18 @@
+# John Etokhana
+
+> Senior product designer in London. Ten years in design, the last seven in product. I design AI products and direct the front-end build, so less gets lost between the design and what ships. Trained as an engineer (B.Eng, Electrical and Electronics Engineering).
+
+Contact: etokhanaj@gmail.com · LinkedIn: https://www.linkedin.com/in/john-etokhana · CV: https://johnetokhana.com/cv/John-Etokhana-CV.pdf
+
+## Case studies
+
+- [Episode (2026)](https://johnetokhana.com/work/episode/): Episode builds landing pages from a prompt and tests them. It is in private beta with paying customers, who published 38 campaign sites in the first month of onboarding. I lead design and direct the front-end build, on contract. I set the chat-first direction, wrote the feature plans the team built from, and check every build against the design.
+- [Rivva (2025 to 2026)](https://johnetokhana.com/work/rivva/): An AI planner for adults with ADHD. Co-founder and head of design. Activation rose from 22% to 34% after the onboarding rebuild I led, and the median time to a first completed task fell from 21 hours to 9.
+- [Kora (2019 to 2022)](https://johnetokhana.com/work/kora/): Payments for African businesses. I led design for the checkout, merchant onboarding and dashboard. Payment-instruction support tickets fell about 43%; over 1,000 merchants used the settlements tool I designed.
+- [MilkyWay (2023 to 2025)](https://johnetokhana.com/work/milkyway/): Liquid staking. I led design from before launch: the staking flow, 1-Click staking from Babylon, withdrawals, validator choice, Lite and Pro modes, and reward dashboards.
+- [Advanced Blockchain (2022 to 2023)](https://johnetokhana.com/work/pablo/): I designed the swap flow for Pablo, a decentralised exchange, so people could judge a trade before confirming. Across the three products I designed, core transaction success rose from 68% to 80%; that covers the suite, not the swap alone.
+- [Inga (2024)](https://johnetokhana.com/work/inga/): A side project made with a few friends: social bookmarking. Save anything from the web into collections you can edit and share. The browser extension, web app and monthly digest went live, and a few hundred people used it.
+
+## Writing
+
+- [How I design with AI](https://johnetokhana.com/notes-ai/)

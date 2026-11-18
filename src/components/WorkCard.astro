@@ -1,0 +1,68 @@
+---
+// Selected-work card, as on the live site: brand thumbnail with the logo,
+// then "Org →", the years, and a one-line result.
+import type { Project } from '../data/site';
+import LogoMotion from './LogoMotion.astro';
+
+interface Props {
+  project: Project;
+}
+const { project: p } = Astro.props;
+const phone = (p.peekFrame ?? p.heroFrame) === 'phone';
+const more = (p.peeks ?? []).slice(0, 2); // the tile cycles through up to three screens
+---
+
+<div class="card" data-reveal>
+  <a class:list={['thumb', p.thumb, p.peek && 'has-peek']} href={`/work/${p.slug}/`} aria-label={`${p.wordmark ?? p.org} case study`}>
+    {p.peek && (
+      <span class:list={['peek', phone && 'peek--phone']} aria-hidden="true">
+        {phone ? (
+          <span class="device"><span class="scr">
+            <img src={p.peek} alt="" loading="lazy" decoding="async" />
+            {more.map((src, i) => <img class:list={['cyc', `cyc-${i + 2}`]} data-src={src} alt="" decoding="async" />)}
+          </span></span>
+        ) : (
+          <span class="win">
+            <img src={p.peek} alt="" loading="lazy" decoding="async" />
+            {more.map((src, i) => <img class:list={['cyc', `cyc-${i + 2}`]} data-src={src} alt="" decoding="async" />)}
+          </span>
+        )}
+      </span>
+    )}
+    <span class="fill">
+      <LogoMotion slug={p.slug} org={p.org} />
+    </span>
+  </a>
+  <div class="card-title">
+    <a class="ext case" href={`/work/${p.slug}/`}>{p.wordmark ?? p.org}</a>
+    <span class="yr">{p.years}</span>
+  </div>
+  <p class="desc">{p.what}</p>
+</div>
+
+<script>
+  // The real screen rises into the tile as the card scrolls into view and
+  // stays up, so the work shows without a hover.
+  {
+    const io = new IntersectionObserver(
+      (es) => es.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('is-shown');
+        io.unobserve(e.target);
+      }),
+      { threshold: 0.6 },
+    );
+    document.querySelectorAll('a.thumb.has-peek').forEach((t) => io.observe(t));
+    // The other screens are fetched the first time a mouse or keyboard reaches
+    // the card, so phones never download what they cannot cycle to.
+    document.querySelectorAll<HTMLElement>('a.thumb.has-peek').forEach((t) => {
+      const load = () => t.querySelectorAll<HTMLImageElement>('img.cyc[data-src]').forEach((img) => {
+        img.src = img.dataset.src!;
+        img.removeAttribute('data-src');
+      });
+      t.addEventListener('pointerenter', load, { once: true });
+      t.addEventListener('focus', load, { once: true });
+    });
+  }
+</script>
+

@@ -1,0 +1,9 @@
+---
+import Index from '../layouts/Index.astro';
+import WorkbenchCard from '../components/WorkbenchCard.astro';
+import { workbench } from '../data/site';
+---
+
+<Index title="Workbench" intro="Experiments, dead ends, prototypes to scratch an itch. Nothing here is finished and some of it never will be." active="workbench">
+  {workbench.items.map((item) => <WorkbenchCard item={item} />)}
+</Index>

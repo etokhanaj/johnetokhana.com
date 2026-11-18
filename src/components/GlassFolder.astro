@@ -1,0 +1,201 @@
+---
+// A glass folder with three photo cards inside, copied from the Figma
+// "Glass Folder, Cursor motion" frame (1080 x 1080). Every size below is a
+// design pixel times --u, so the folder scales with the box it sits in.
+//
+// Motion: the cards have three poses, at rest, lifted and fanned out, with the
+// Figma values (how far, how much tilt, the overshooting ease, the beat between
+// cards). Every change is a transition between poses, so it can be interrupted
+// at any point. The frame's demo cursor and click ring are left out, because on
+// the site the real pointer plays that part.
+// - Idle: once per shared loop (see scripts/idle-loop) the cards lift, pause,
+//   fan out and settle, on the Figma timeline's timings.
+// - Hover or keyboard focus on the link around it: straight to fanned out,
+//   quicker, and a quick settle on leaving. The stickers give a small wiggle.
+// - Reduced motion: nothing moves; hover brightens the folder a little.
+import Sticker from './Sticker.astro';
+import type { Sticker as StickerData } from '../data/site';
+
+interface Props {
+  files: { src: string; title: string; meta: string }[]; // three cards, back to front
+  label: string;
+  sub: string;
+  stickers?: StickerData[]; // up to three, on the front of the folder
+}
+const { files, label, sub, stickers = [] } = Astro.props;
+const uid = Math.random().toString(36).slice(2, 8);
+const GLASS = 'M0 45.6397C0 20.4341 20.4341 0 45.6397 0H244.795C298.732 0 302.881 66.385 356.819 66.385H659.701C684.906 66.385 705.34 86.8191 705.34 112.025V365.117C705.34 390.323 684.906 410.757 659.701 410.757H45.6397C20.4341 410.757 0 390.323 0 365.117V45.6397Z';
+const mask = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 705.34 410.757' preserveAspectRatio='none'><path d='${GLASS}'/></svg>`)}")`;
+---
+
+<span class="gf" data-gf aria-hidden="true">
+  <span class="gf-stage">
+    <span class="gf-folder">
+      <span class="gf-back"><img src="/assets/glass-folder/back-panel.svg" alt="" /></span>
+      <span class="gf-clip">
+        {files.slice(0, 3).map((f, i) => (
+          <span class:list={['gf-file', `gf-f${i + 1}`]}>
+            <img src={f.src} alt="" loading="lazy" decoding="async" />
+            <span class="gf-name">{f.title}</span>
+            <span class="gf-meta">{f.meta}</span>
+          </span>
+        ))}
+      </span>
+      <span class="gf-glass">
+        <span class="gf-blur" style={`-webkit-mask-image:${mask};mask-image:${mask}`}></span>
+        <svg viewBox="0 0 705.34 410.757" preserveAspectRatio="none" fill="none">
+          <path d={GLASS} fill={`url(#gf-fill-${uid})`} stroke={`url(#gf-edge-${uid})`} stroke-width="4.97887" />
+          <defs>
+            <linearGradient id={`gf-fill-${uid}`} x1="352.67" y1="0" x2="352.67" y2="410.757" gradientUnits="userSpaceOnUse">
+              <stop stop-color="white" stop-opacity="0.16" />
+              <stop offset="0.42" stop-color="white" stop-opacity="0.5" />
+              <stop offset="1" stop-color="#FCFCFC" stop-opacity="0.93" />
+            </linearGradient>
+            <linearGradient id={`gf-edge-${uid}`} x1="352.67" y1="0" x2="352.67" y2="410.757" gradientUnits="userSpaceOnUse">
+              <stop stop-color="white" stop-opacity="0.95" />
+              <stop offset="0.35" stop-color="white" stop-opacity="0.35" />
+              <stop offset="1" stop-color="white" stop-opacity="0.12" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </span>
+      <span class="gf-label">
+        <span class="gf-title">{label}</span>
+        <span class="gf-sub">{sub}</span>
+      </span>
+      <span class="gf-key">
+        {stickers.slice(0, 3).map((s, i) => (
+          <span class:list={['gf-stick', `gf-s${i + 1}`]}><span><Sticker s={s} uid={`gf-${uid}-${s.id}`} /></span></span>
+        ))}
+      </span>
+    </span>
+  </span>
+</span>
+
+<style>
+  .gf { position: absolute; inset: 0; display: block; container-type: size; --u: calc(100cqh / 720); }
+  .gf span { display: block; }
+  /* The frame's 1080 x 1080, showing the band from y 180 to 900 where everything happens.
+     Shifted so the folder's left edge sits on the box's left edge, over the title below it. */
+  .gf-stage { position: absolute; left: calc(-187.33 * var(--u)); top: 0; width: calc(1080 * var(--u)); height: calc(720 * var(--u)); }
+  .gf-folder { position: absolute; left: calc(187.33 * var(--u)); top: calc(21.8515 * var(--u)); width: calc(705.34 * var(--u)); height: calc(676.297 * var(--u)); }
+  /* The folder's soft shadow sits on the back panel, which never moves, so the cards can move without redrawing it. */
+  .gf-back { position: absolute; left: 0; top: calc(146.08 * var(--u)); width: calc(705.34 * var(--u)); height: calc(530.221 * var(--u)); filter: drop-shadow(0 calc(99.577 * var(--u)) calc(30.081 * var(--u)) rgba(13, 13, 13, 0.01)) drop-shadow(0 calc(43.565 * var(--u)) calc(21.783 * var(--u)) rgba(13, 13, 13, 0.02)) drop-shadow(0 calc(10.373 * var(--u)) calc(12.447 * var(--u)) rgba(13, 13, 13, 0.02)); }
+  .gf-back img { position: absolute; inset: -0.2% -0.15%; display: block; width: 100.3%; height: 100.4%; max-width: none; }
+
+  .gf-clip { position: absolute; left: calc(-207.45 * var(--u)); top: calc(-414.91 * var(--u)); width: calc(1120.246 * var(--u)); height: calc(1070.458 * var(--u)); overflow: clip; }
+  .gf-file {
+    position: absolute; width: calc(564.272 * var(--u)); height: calc(381.714 * var(--u)); border-radius: calc(33.192 * var(--u)); overflow: clip; background: #d9d4cf;
+    transform-origin: 0 0; translate: 0 0; rotate: 0rad;
+    /* --gf-d and --gf-e are set by the pose below; --gf-w is the beat between cards */
+    transition: translate var(--gf-d) var(--gf-e) var(--gf-w, 0s), rotate var(--gf-d) var(--gf-e) var(--gf-w, 0s);
+  }
+  .gf-f1 { left: calc(277.99 * var(--u)); top: calc(668 * var(--u)); }
+  .gf-f2 { left: calc(284.21 * var(--u)); top: calc(699.12 * var(--u)); --gf-w: 0.045s; }
+  .gf-f3 { left: calc(269.69 * var(--u)); top: calc(730.25 * var(--u)); --gf-w: 0.09s; }
+  .gf-file img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+  .gf-name { position: absolute; left: calc(29.04 * var(--u)); top: calc(22.83 * var(--u)); font: 600 calc(25.932 * var(--u)) / 1.2 var(--sans); color: #fafafa; white-space: nowrap; }
+  .gf-meta { position: absolute; right: calc(29.04 * var(--u)); top: calc(26.98 * var(--u)); font: 400 calc(20.745 * var(--u)) / 1.2 var(--sans); color: rgba(250, 250, 250, 0.66); white-space: nowrap; }
+
+  .gf-glass { position: absolute; left: 0; bottom: 0; width: calc(705.34 * var(--u)); height: calc(410.757 * var(--u)); transform-origin: 50% 100%; transform: rotateX(-26deg); }
+  .gf-blur { position: absolute; inset: 0; -webkit-backdrop-filter: blur(calc(10.37 * var(--u))); backdrop-filter: blur(calc(10.37 * var(--u))); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+  .gf-glass svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible; }
+
+  .gf-label { position: absolute; left: calc(45.64 * var(--u)); top: calc(526.93 * var(--u)); display: flex !important; flex-direction: column; gap: calc(4.149 * var(--u)); align-items: flex-start; white-space: nowrap; }
+  .gf-title { font: 400 calc(62 * var(--u)) / 1 'Covered By Your Grace', 'Bradley Hand', cursive; color: #4a4142; letter-spacing: calc(0.9958 * var(--u)); text-transform: capitalize; }
+  .gf-sub { font: 400 calc(29.043 * var(--u)) / 1.2 var(--mono); color: rgba(20, 20, 22, 0.49); letter-spacing: calc(1.4522 * var(--u)); }
+
+  .gf-key { position: absolute; left: calc(539.38 * var(--u)); top: calc(510.33 * var(--u)); width: calc(120.323 * var(--u)); height: calc(120.323 * var(--u)); }
+  .gf-stick { position: absolute; display: flex !important; align-items: center; justify-content: center; }
+  .gf-stick > span { flex: none; width: calc(150 * var(--u)); height: calc(150 * var(--u)); filter: drop-shadow(0 calc(4 * var(--u)) calc(6 * var(--u)) rgba(13, 13, 13, 0.12)); }
+  .gf-stick :global(svg) { display: block; width: 100%; height: 100%; }
+  .gf-s1 { left: calc(-63.8 * var(--u)); top: calc(-152.87 * var(--u)); width: calc(205.663 * var(--u)); height: calc(201.666 * var(--u)); }
+  .gf-s1 > span { transform: rotate(14deg); }
+  .gf-s2 { left: calc(-196.12 * var(--u)); top: calc(-80.58 * var(--u)); width: calc(165.545 * var(--u)); height: calc(164.167 * var(--u)); }
+  .gf-s2 > span { transform: rotate(-6.93deg); }
+  .gf-s3 { left: calc(-84.41 * var(--u)); top: calc(-23.38 * var(--u)); width: calc(184.6 * var(--u)); height: calc(161.027 * var(--u)); }
+  .gf-s3 > span { transform: rotate(-15deg); }
+
+  /* ---- Poses. Lifted and fanned out are the Figma keyframe values. ---- */
+  .gf.is-peek .gf-f1 { translate: calc(-16.596241 * var(--u)) calc(-95.428391 * var(--u)); rotate: -0.024435rad; }
+  .gf.is-peek .gf-f2 { translate: 0 calc(-105.801033 * var(--u)); }
+  .gf.is-peek .gf-f3 { translate: calc(16.596241 * var(--u)) calc(-116.173698 * var(--u)); rotate: 0.024435rad; }
+  .gf.is-open .gf-f1 { translate: calc(-82.981216 * var(--u)) calc(-203.30397 * var(--u)); rotate: -0.087266rad; }
+  .gf.is-open .gf-f2 { translate: 0 calc(-172.18602 * var(--u)); }
+  .gf.is-open .gf-f3 { translate: calc(82.981216 * var(--u)) calc(-141.068054 * var(--u)); rotate: 0.087266rad; }
+
+  /* ---- Timing. With the pointer: out in 380ms with the overshoot, back in 280ms without. ---- */
+  .gf { --gf-d: 280ms; --gf-e: var(--ease-out); }
+  .gf.is-open { --gf-d: 380ms; --gf-e: var(--ease-pop); }
+  /* The idle run keeps the Figma timeline: lift 0.56s, fan out 0.63s, settle 0.586s, all with the overshoot. */
+  .gf.is-idle { --gf-d: 0.586s; --gf-e: var(--ease-pop); }
+  .gf.is-idle.is-peek { --gf-d: 0.56s; }
+  .gf.is-idle.is-open { --gf-d: 0.63s; }
+
+  /* The stickers on the front shift a little and wiggle once when the pointer arrives, like the badges above. */
+  .gf-stick { transition: translate 280ms var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .gf.is-hot .gf-stick { translate: 0 calc(-6 * var(--u)); }
+    .gf.is-hot .gf-stick > span { animation: gf-wiggle 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+    .gf.is-hot .gf-s2 > span { animation-delay: 60ms; }
+    .gf.is-hot .gf-s3 > span { animation-delay: 120ms; }
+  }
+  @keyframes gf-wiggle { 0%, 100% { rotate: 0deg; } 20% { rotate: -7deg; } 40% { rotate: 5deg; } 60% { rotate: -3deg; } 80% { rotate: 1.5deg; } }
+
+  /* Reduced motion: the cards stay put. The pointer gets a gentle brightening instead. */
+  .gf-stage { transition: filter 200ms var(--ease); }
+  @media (prefers-reduced-motion: reduce) {
+    .gf .gf-file { translate: 0 0 !important; rotate: 0rad !important; transition: none !important; }
+    .gf .gf-stick, .gf .gf-stick > span { translate: none !important; animation: none !important; }
+    .gf.is-hot .gf-stage { filter: brightness(1.06); }
+  }
+</style>
+
+<script>
+  import { untilPhase } from '../scripts/idle-loop';
+
+  // The Figma timeline, in ms: lift, pause, fan out, pause, settle.
+  const LIFT = 560;
+  const PAUSE = 753;
+  const FAN = 630;
+  const HOLD = 982;
+  const SETTLE = 586 + 90; // the last card starts 90ms after the first
+  const AT = 2000; // where in the shared loop the folder's run starts
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLElement>('[data-gf]').forEach((gf) => {
+    let timers: number[] = [];
+    let seen = false;
+    let held = false;
+    const later = (fn: () => void, ms: number) => timers.push(window.setTimeout(fn, ms));
+    const cancel = () => { timers.forEach(clearTimeout); timers = []; };
+    const rest = () => gf.classList.remove('is-peek', 'is-open');
+
+    // Idle: one run per loop, only while on screen and nobody is pointing at it.
+    const queue = () => {
+      cancel();
+      if (still || !seen || held) return;
+      later(() => {
+        gf.classList.add('is-idle', 'is-peek');
+        later(() => gf.classList.add('is-open'), LIFT + PAUSE);
+        later(rest, LIFT + PAUSE + FAN + HOLD);
+        later(() => { gf.classList.remove('is-idle'); queue(); }, LIFT + PAUSE + FAN + HOLD + SETTLE);
+      }, untilPhase(AT));
+    };
+    new IntersectionObserver(([e]) => {
+      seen = e.isIntersecting && e.intersectionRatio >= 0.6;
+      if (seen) queue();
+      else { cancel(); if (!held) { rest(); gf.classList.remove('is-idle'); } }
+    }, { threshold: [0, 0.6] }).observe(gf);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { cancel(); if (!held) rest(); } else queue(); });
+
+    // The pointer: straight to fanned out, and a quick settle on leaving.
+    const host = gf.closest<HTMLElement>('a, button') ?? gf;
+    const hold = () => { held = true; cancel(); gf.classList.remove('is-idle'); gf.classList.add('is-hot', 'is-peek', 'is-open'); };
+    const release = () => { if (!held) return; held = false; gf.classList.remove('is-hot'); rest(); queue(); };
+    host.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') hold(); });
+    host.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') release(); });
+    host.addEventListener('focus', () => { if (host.matches(':focus-visible')) hold(); });
+    host.addEventListener('blur', release);
+  });
+</script>

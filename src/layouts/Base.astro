@@ -1,0 +1,199 @@
+---
+import '../styles/global.css';
+import Dock from '../components/Dock.astro';
+import Palette from '../components/Palette.astro';
+import ChatPanel from '../components/ChatPanel.astro';
+import NowPlaying from '../components/NowPlaying.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  bodyClass?: string;
+  noindex?: boolean; // keep a page out of search results
+  image?: string; // link-preview image, a site path; defaults to /og.jpg
+  type?: 'website' | 'article';
+}
+
+const {
+  title,
+  description = "John Etokhana is a product designer with an engineer's instincts. Ten years in design, the last seven in product. Based in London.",
+  bodyClass,
+  noindex = false,
+  image = '/og.jpg',
+  type = 'website',
+} = Astro.props;
+const site = Astro.site ?? new URL('https://johnetokhana.com');
+const canonical = new URL(Astro.url.pathname, site).href;
+const ogImage = new URL(image, site).href;
+
+// Who John is, for search engines (home page only)
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'John Etokhana',
+  url: site.href,
+  image: new URL('/assets/home/avatar.jpg', site).href,
+  jobTitle: 'Product Designer',
+  description: "Product designer with an engineer's instincts. Ten years in design, the last seven in product.",
+  address: { '@type': 'PostalAddress', addressLocality: 'London', addressCountry: 'GB' },
+  sameAs: ['https://www.linkedin.com/in/john-etokhana', 'https://github.com/etokhanaj', 'https://tokanaj.substack.com/', 'https://adplist.org/mentors/john-etokhana'],
+};
+const isHome = Astro.url.pathname === '/';
+// Apply a saved light or dark choice before first paint, on every page.
+const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}})();`;
+// Set the mode before first paint so Play never flashes Work.
+// A chat left open on the last page: make room for it before first paint (see scripts/chat).
+const chatScript = `(function(){try{var s=JSON.parse(sessionStorage.getItem('johnlm')||'{}');if(s.open&&s.turns&&s.turns.length)document.documentElement.classList.add('has-chat','chat-instant');}catch(e){}})();`;
+const modeScript = `(function(){try{var q=new URLSearchParams(location.search).get('mode');var m=q||sessionStorage.getItem('mode')||'work';if(m!=='play')m='work';document.documentElement.dataset.mode=m;}catch(e){}})();`;
+---
+
+<!doctype html>
+<html lang="en-GB" data-mode="work">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="John Etokhana" />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f9f9f9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111214" media="(prefers-color-scheme: dark)" />
+    <script is:inline set:html={themeScript} />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="sitemap" href="/sitemap.xml" />
+    <meta property="og:site_name" content="John Etokhana" />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    {isHome && <script type="application/ld+json" set:html={JSON.stringify(person)} />}
+    <link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
+    {isHome && <script is:inline set:html={modeScript} />}
+    <script is:inline set:html={chatScript} />
+  </head>
+  <body class={bodyClass} data-home={isHome ? '' : undefined}>
+    <div class="progress" aria-hidden="true"></div>
+    <slot />
+    <NowPlaying />
+    <footer class="site-foot">
+      <span>© 2026 John Etokhana</span>
+      <span>When in doubt, minimise.</span>
+    </footer>
+    <Dock />
+    <Palette />
+    <ChatPanel />
+  </body>
+</html>
+
+<script>
+  import { initDock } from '../scripts/dock';
+  import { initPalette } from '../scripts/palette';
+  import { initChat } from '../scripts/chat';
+  import { initPassport } from '../scripts/passport';
+  import { initTheme } from '../scripts/theme';
+
+  initTheme();
+  initPassport();
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Scroll progress
+  const bar = document.querySelector<HTMLElement>('.progress');
+  if (bar) {
+    const onScroll = () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      bar.style.transform = `scaleX(${max > 0 ? h.scrollTop / max : 0})`;
+    };
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // Staggered reveal
+  const revealables = [...document.querySelectorAll<HTMLElement>('[data-reveal]')];
+  if (reduce) revealables.forEach((el) => el.classList.add('in'));
+  else {
+    const rev = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const el = e.target as HTMLElement;
+            el.style.transitionDelay = (parseInt(el.dataset.reveal || '0', 10) || 0) + 'ms';
+            el.classList.add('in');
+            obs.unobserve(el);
+          }
+        });
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.06 },
+    );
+    revealables.forEach((el) => rev.observe(el));
+  }
+
+  // Videos that should play faster than recorded (data-rate on the element)
+  document.querySelectorAll<HTMLVideoElement>('video[data-rate]').forEach((v) => {
+    const r = Number(v.dataset.rate) || 1;
+    const set = () => { v.defaultPlaybackRate = r; v.playbackRate = r; };
+    set();
+    v.addEventListener('loadedmetadata', set);
+  });
+
+  // Reduced motion: no autoplaying loops
+  if (reduce) {
+    document.querySelectorAll<HTMLVideoElement>('video[autoplay]').forEach((v) => {
+      v.autoplay = false;
+      v.controls = true;
+      v.pause();
+    });
+  } else {
+    // Autoplay can still be refused (Low Power Mode, data saver). Try when the
+    // video is on screen, and if the browser says no, show its play button
+    // instead of a still poster.
+    const vio = new IntersectionObserver((es) => es.forEach((e) => {
+      const v = e.target as HTMLVideoElement;
+      if (!e.isIntersecting || !v.paused) return;
+      v.play().catch(() => { v.controls = true; });
+    }), { threshold: 0.25 });
+    document.querySelectorAll<HTMLVideoElement>('video[autoplay]').forEach((v) => vio.observe(v));
+  }
+
+  // Click-to-copy email (contact row)
+  const mail = document.getElementById('mail');
+  mail?.addEventListener('click', (e) => {
+    e.preventDefault();
+    navigator.clipboard?.writeText(mail.dataset.email!);
+    const h = document.getElementById('copyhint');
+    if (h) {
+      const prev = h.textContent;
+      h.textContent = 'Copied!';
+      setTimeout(() => (h.textContent = prev), 1400);
+    }
+  });
+
+  // Email links also copy the address and show it, because a mailto link does
+  // nothing on a device without a mail app set up.
+  document.querySelectorAll<HTMLAnchorElement>('a[data-copy-email]').forEach((a) => {
+    const label = a.textContent;
+    let timer = 0;
+    a.addEventListener('click', () => {
+      navigator.clipboard?.writeText(a.dataset.copyEmail!).catch(() => {});
+      a.textContent = `${a.dataset.copyEmail} (copied)`;
+      clearTimeout(timer);
+      timer = window.setTimeout(() => (a.textContent = label), 2400);
+    });
+  });
+
+  initDock();
+  initPalette();
+  initChat();
+</script>

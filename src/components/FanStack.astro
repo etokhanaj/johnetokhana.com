@@ -1,0 +1,25 @@
+---
+// An entry on Play: one object over a title and one line. The object is a
+// glass folder of photos (`folder`) or a stack of record sleeves (`records`).
+import GlassFolder from './GlassFolder.astro';
+import RecordStack from './RecordStack.astro';
+import type { Sticker } from '../data/site';
+
+interface Props {
+  href: string;
+  title: string;
+  sub: string;
+  fill?: string; // set data-fan so a script can swap in live images
+  records?: { covers: (string | undefined)[] };
+  folder?: { files: { src: string; title: string; meta: string }[]; label: string; sub: string; stickers?: Sticker[] };
+}
+const { href, title, sub, fill, folder, records } = Astro.props;
+---
+
+<a class="fan fan--object" href={href} data-fan={fill}>
+  <span class="fan-cards" aria-hidden="true">
+    {folder ? <GlassFolder {...folder} /> : records ? <RecordStack {...records} /> : null}
+  </span>
+  <span class="fan-title">{title}</span>
+  <span class="fan-sub">{sub}</span>
+</a>

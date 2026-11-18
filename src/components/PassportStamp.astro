@@ -1,0 +1,89 @@
+---
+// Passport stamps: the visitor's side of the Known for stickers. Same family
+// (rounded lettering on arcs, a keyline inside the outline, one shape each), but
+// drawn as one-colour rubber-stamp ink rather than a filled die-cut sticker.
+// The bottom line is the date the stamp was earned, filled in by passport.ts.
+import type { Stamp } from '../scripts/passport';
+
+interface Props {
+  s: Stamp;
+}
+const { s } = Astro.props;
+const font = "ui-rounded, 'SF Pro Rounded', 'Nunito', system-ui, sans-serif";
+const title = s.title.toUpperCase();
+
+// Arcs centred on (50, 50), as in Sticker.astro: top reads over the top,
+// bottom reads under the bottom with glyphs upright.
+const top = (r: number) => `M${50 - r} 50 A${r} ${r} 0 0 1 ${50 + r} 50`;
+const bot = (r: number) => `M${50 - r} 50 A${r} ${r} 0 0 0 ${50 + r} 50`;
+const octagon = (o: number) => {
+  const a = 4 + o;
+  const b = 96 - o;
+  const c = 27 + o * 0.41;
+  return `M${c} ${a} H${100 - c} L${b} ${c} V${100 - c} L${100 - c} ${b} H${c} L${a} ${100 - c} V${c} Z`;
+};
+const arcs = s.shape === 'circle' || s.shape === 'groove';
+// The icon sits a little higher in the straight-text shapes, to clear the date.
+const iy = arcs ? 50 : 48;
+const k = 1.15;
+---
+
+<svg viewBox="0 0 100 100" aria-hidden="true">
+  <defs>
+    <path id={`ppt-${s.id}`} d={top(34.5)} />
+    <path id={`ppb-${s.id}`} d={bot(34.5)} />
+  </defs>
+  <g filter="url(#pp-rough)" fill="none" stroke="currentColor">
+    {s.shape === 'circle' && (
+      <>
+        <circle class="pp-outer" cx="50" cy="50" r="46" stroke-width="2.6" />
+        <circle cx="50" cy="50" r="28.5" stroke-width="1.2" />
+      </>
+    )}
+    {s.shape === 'groove' && (
+      <>
+        <circle class="pp-outer" cx="50" cy="50" r="46" stroke-width="2.6" />
+        <circle cx="50" cy="50" r="28.5" stroke-width="1.2" />
+        <circle cx="50" cy="50" r="24.5" stroke-width="0.9" stroke-dasharray="1.4 2.2" />
+      </>
+    )}
+    {s.shape === 'ticket' && (
+      <>
+        <rect class="pp-outer" x="3" y="16" width="94" height="68" rx="9" stroke-width="2.6" />
+        <rect x="9" y="22" width="82" height="56" rx="4" stroke-width="1.2" />
+      </>
+    )}
+    {s.shape === 'octagon' && (
+      <>
+        <path class="pp-outer" d={octagon(0)} stroke-width="2.6" />
+        <path d={octagon(6)} stroke-width="1.2" />
+      </>
+    )}
+    {s.shape === 'square' && (
+      <>
+        <rect class="pp-outer" x="6" y="6" width="88" height="88" rx="18" stroke-width="2.6" />
+        <rect x="12" y="12" width="76" height="76" rx="13" stroke-width="1.2" />
+      </>
+    )}
+    {s.shape === 'oval' && (
+      <>
+        <ellipse class="pp-outer" cx="50" cy="50" rx="47" ry="37" stroke-width="2.6" />
+        <ellipse cx="50" cy="50" rx="41" ry="31" stroke-width="1.2" />
+      </>
+    )}
+    <path d={s.icon} class:list={['pp-icon', s.solid && 'is-solid']} transform={`translate(${50 - 12 * k} ${iy - 12 * k}) scale(${k})`} stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  <g filter="url(#pp-rough)" fill="currentColor" font-family={font} font-weight="700" letter-spacing="0.6">
+    {arcs ? (
+      <>
+        <text font-size="7.2"><textPath href={`#ppt-${s.id}`} startOffset="50%" text-anchor="middle">{title}</textPath></text>
+        <text font-size="7.2" dy="5.2"><textPath href={`#ppb-${s.id}`} startOffset="50%" text-anchor="middle" data-stamp-date /></text>
+      </>
+    ) : (
+      <>
+        <text font-size="6.6" x="50" y={s.shape === 'oval' ? 32 : 33} text-anchor="middle">{title}</text>
+        <text font-size="6.6" x="50" y={s.shape === 'oval' ? 73 : 72} text-anchor="middle" data-stamp-date />
+      </>
+    )}
+  </g>
+</svg>

@@ -1,0 +1,77 @@
+---
+dek: "People save useful things from the web, then struggle to find or use them again. Inga was a side project I designed in 2024 with a few friends to make saving quick and coming back easy. A few hundred people used it."
+role: Design
+team: A side project with a few friends
+status: Live in 2024, then discontinued
+draft: true
+---
+import Led from '../../components/cs/Led.astro';
+import Figure from '../../components/cs/Figure.astro';
+import FigureRow from '../../components/cs/FigureRow.astro';
+
+## Overview
+
+Inga was social bookmarking: save anything from the web, keep it in collections you can edit, and share them. It was a side project I made in 2024 with a few friends, Abdulshaqur Suleiman among them, for ourselves first and for everyday heavy browser users who bookmark everything. <Led>I led design for Inga's browser extension, web app and monthly digest.</Led>
+
+<Figure frame="plain" src="/assets/inga/extension.jpg" alt="Inga's browser extension, three screens: saving one link with a collection, type and tags; saving every open tab as a session, with some tabs unticked; and a saved session with Open all tabs" />
+
+## What's the impact?
+
+- Everything here went live: the extension, the web app, the monthly digest, sharing with roles, comments and reactions
+- A few hundred people used it
+- We never had a strong measure of how often people came back to what they saved, so this proved initial use, not long-term retention
+
+## What's the problem?
+
+Heavy browser users save a lot and come back to very little. A bookmark keeps a link and loses why it mattered: no note, no tags, nothing to bring it back. Open tabs pile up as a to-do list nobody finishes, and sharing a set of links means pasting them into a chat one by one.
+
+## What did we ship?
+
+### Save without leaving the page
+
+The extension saves where you already are: one link with its collection, type, tags and an optional reminder, or every open tab as a session. Untick the tabs you don't need, choose whether to close them, and save. A session opens again with one click. The web app has the same save, with collections, tags and a reminder.
+
+<Figure src="/assets/inga/save-link-details.jpg" alt="Save Content in the web app: a link with a collections picker, tags and a reminder date and time" />
+
+<Figure video="/assets/inga/session-interaction" alt="Saving a browsing session with Inga's extension: twelve tabs open on a trip to Lisbon; the extension lists them; three are unticked; Save 9 tabs closes the nine and keeps the rest; then Open all tabs brings the session back. Rebuilt from the extension's design with example tabs." />
+
+### Bring saves back
+
+A reminder brings a save back when it's due. Its page shows the date, with its tags and the other collections it sits in.
+
+<Figure src="/assets/inga/content-view.jpg" alt="A saved image's page: who saved it, the reminder date and time, its title and note, its tags and the other collections it belongs to, with Note, Comments and Share at the top" />
+
+Once a month, a digest shows how much you saved, your most viewed collection, the content you came back to most, and a breakdown by type.
+
+<Figure src="/assets/inga/digest.jpg" alt="The monthly digest: a greeting, the number of items saved that month, the most viewed collection, the content you interacted with most, and a breakdown of saves by category, with earlier months listed at the side" />
+
+### Collections you can share
+
+Collections are mood boards you can filter, sort and search, or switch to cards, a list or a table.
+
+<Figure video="/assets/inga/webapp-interaction" alt="Inga's web app: one collection switched between mood board, card, list and table views; a saved image opened with its reminder, tags and other collections; the comments panel with a reaction picker; and Share Content, with a role for each person and a link to copy" />
+
+Share one by email or username, with a role for each person: view, comment, edit or co-own, or with anyone who has the link. Comments sit on the saved item itself, beside its tags and the other collections it belongs to, with replies and reactions.
+
+<Figure src="/assets/inga/sharing.jpg" alt="Share Content over a saved image: invite by email or username, anyone with the link can view, and three people set to comment, edit and co-own, with Copy link" />
+
+<Figure src="/assets/inga/comments.jpg" alt="Comments on a saved image: a thread with replies, and a reaction picker open on the first comment, beside the image, its reminder and its tags" />
+
+### The same collections on a phone
+
+I also designed Inga for the phone: the same collections, with a save that starts from one button.
+
+<FigureRow
+  items={[
+    { video: '/assets/inga/mobile-interaction', alt: "Inga's mobile design: a collection of saved images; the add button opens Save Link, Upload Content and Create Collection; saving a link with its category and title, then its collections, tags and a reminder; Link Saved; and back to the collection" },
+  ]}
+/>
+
+## Why it stopped
+
+We started Inga for fun, and a product a few hundred people use needs steady hours from all of us. When we got busy, we didn't have them.
+
+## Takeaways
+
+1. A save only pays off when it comes back. Design the way back, the reminders and the digest, with the same care as the save.
+2. Decide early, together, whether a project is for fun or for real, and agree the hours it needs. AI tools now carry much of a build, as they do on [Yada](https://yadabible.com), but they don't make that decision for you.

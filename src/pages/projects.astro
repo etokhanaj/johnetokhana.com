@@ -1,0 +1,9 @@
+---
+import Index from '../layouts/Index.astro';
+import WorkCard from '../components/WorkCard.astro';
+import { projects } from '../data/site';
+---
+
+<Index title="Projects" intro="Work that shipped, or got far enough to be worth explaining." active="projects">
+  {projects.map((p) => <WorkCard project={p} />)}
+</Index>

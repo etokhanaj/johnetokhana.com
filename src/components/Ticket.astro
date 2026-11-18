@@ -1,0 +1,116 @@
+---
+// A ticket for one place on Window seat: the route in big codes (or just the
+// destination when the start isn't known), the date and carrier underneath, and a stub with a barcode on a notched tear line. It is
+// all spans so it can sit inside a button, and it sizes itself from its own
+// width, so the same ticket works full size and as a thumbnail.
+import type { Place } from '../data/site';
+
+interface Props {
+  place: Place;
+  compact?: boolean; // a flight-result card: carrier and country, the route with cities, the date on the tear-off
+}
+const { place: p, compact = false } = Astro.props;
+const flight = p.flight !== false && !!p.from; // without a start, don't claim a flight
+
+// A barcode that's the same every build for the same ticket. Decorative only.
+const seed = [...`${p.code}${p.when}${p.city}`].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+let h = seed;
+const widths = Array.from({ length: 34 }, () => {
+  h = (h * 1103515245 + 12345) >>> 0;
+  return 1 + (h % 3);
+});
+const total = widths.reduce((a, b) => a + b, 0);
+let at = 0;
+const stops = widths
+  .map((w, i) => {
+    const a = (at / total) * 100;
+    at += w;
+    const b = (at / total) * 100;
+    const c = i % 2 ? 'transparent' : 'currentColor';
+    return `${c} ${a.toFixed(2)}% ${b.toFixed(2)}%`;
+  })
+  .join(', ');
+---
+
+{compact ? (
+  <span class="tk tk--compact">
+    <span class="tk-main">
+      <span class="tk-row">
+        <span class="tk-carrier">{p.carrier ?? (flight ? 'Flight' : 'Trip')}</span>
+        <span class="tk-tag">{p.country}</span>
+      </span>
+      <span class:list={['tk-route', !p.from && 'tk-route--to']}>
+        {p.from && (
+          <span class="tk-end">
+            <span class="tk-code">{p.from.code}</span>
+            <span class="tk-place">{p.from.city}</span>
+          </span>
+        )}
+        {p.from && (
+          <span class="tk-path" aria-hidden="true">
+            <span class="tk-mover">{flight ? <svg class="tk-plane" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)" /></svg> : <span class="tk-dot"></span>}</span>
+            <span class="tk-line"></span>
+            <span class="tk-end-dot"></span>
+          </span>
+        )}
+        <span class:list={['tk-end', p.from && 'tk-end--to']}>
+          <span class="tk-code">{p.code}</span>
+          <span class="tk-place">{p.city}</span>
+        </span>
+      </span>
+    </span>
+    <span class="tk-stub" aria-hidden="true">
+      <span class="tk-when"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z" /></svg>{p.when}</span>
+      {p.via && <span class="tk-via">via {p.via}</span>}
+    </span>
+  </span>
+) : (
+<span class="tk">
+  <span class="tk-main">
+    <span class="tk-top">
+      <span>{flight ? 'Boarding pass' : 'Ticket'}</span>
+      {p.carrier && <span>{p.carrier}</span>}
+    </span>
+    {p.from ? (
+      <span class="tk-route">
+        <span class="tk-end">
+          <span class="tk-city">{p.from.city}</span>
+          <span class="tk-code">{p.from.code}</span>
+        </span>
+        <span class="tk-path" aria-hidden="true">
+          <svg viewBox="0 0 100 28" preserveAspectRatio="none">
+            {flight ? <path d="M3 25 Q50 -6 97 25" /> : <path d="M3 18 L97 18" />}
+          </svg>
+          {flight ? (
+            <svg class="tk-plane" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(90 12 12)" /></svg>
+          ) : (
+            <span class="tk-dot"></span>
+          )}
+        </span>
+        <span class="tk-end tk-end--to">
+          <span class="tk-city">{p.city}</span>
+          <span class="tk-code">{p.code}</span>
+        </span>
+      </span>
+    ) : (
+      <span class="tk-route tk-route--to">
+        <span class="tk-end">
+          <span class="tk-city">{p.city}</span>
+          <span class="tk-code">{p.code}</span>
+        </span>
+      </span>
+    )}
+    <span class="tk-fields">
+      <span><span class="tk-k">Date</span><span class="tk-v">{p.when}</span></span>
+      {p.via && <span><span class="tk-k">Via</span><span class="tk-v">{p.via}</span></span>}
+      <span><span class="tk-k">Destination</span><span class="tk-v">{p.city}, {p.country}</span></span>
+    </span>
+  </span>
+  <span class="tk-stub" aria-hidden="true">
+    <span class="tk-foot">{[p.when, p.via && `via ${p.via}`, p.carrier].filter(Boolean).join(' · ')}</span>
+    <span class="tk-code">{p.code}</span>
+    <span class="tk-bars" style={`background: linear-gradient(90deg, ${stops})`}></span>
+    <span class="tk-k">{p.when}</span>
+  </span>
+</span>
+)}

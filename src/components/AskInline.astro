@@ -1,0 +1,51 @@
+---
+// JohnLM on a case study: a question box under the hero with three questions
+// about this project. Asking opens the answer in the ⌘K palette.
+interface Props { page: string; org: string }
+const { page, org } = Astro.props;
+
+const chipFiles = import.meta.glob('../content/johnlm/chips.json', { eager: true, import: 'default' });
+const chips = ((Object.values(chipFiles)[0] as Record<string, string[]> | undefined) ?? {})[page] ?? [];
+const askIcon = '<path d="M2.5 4.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7l-3 2.5v-2.5h0a2 2 0 0 1-1.5-2z"/>';
+---
+
+<section class="ask-cs" data-ask-inline data-page={page} aria-label={`Ask JohnLM about ${org}`}>
+  <p class="ac-label" aria-hidden="true">Ask JohnLM</p>
+  <form class="ac-box" data-ac-form>
+    <svg class="ac-ico" viewBox="0 0 16 16" aria-hidden="true" set:html={askIcon} />
+    <input type="text" name="q" maxlength="500" autocomplete="off" spellcheck="false" placeholder={`Ask about ${org}`} aria-label={`Ask JohnLM a question about ${org}`} data-ac-input />
+    <button type="submit" class="ac-send" aria-label="Ask JohnLM" disabled data-ac-send>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3.5M3.5 8 8 3.5 12.5 8" /></svg>
+    </button>
+  </form>
+  {chips.length > 0 && (
+    <ul class="ac-sugs" data-ac-chips>
+      {chips.map((q) => <li><button type="button" class="pa-next" data-q={q}><span>{q}</span></button></li>)}
+    </ul>
+  )}
+</section>
+
+<script>
+  // Answers open in the ⌘K palette, where the whole conversation lives; this
+  // box is where a question about this case study starts.
+  document.querySelectorAll<HTMLElement>('[data-ask-inline]').forEach((box) => {
+    const form = box.querySelector<HTMLFormElement>('[data-ac-form]')!;
+    const input = box.querySelector<HTMLInputElement>('[data-ac-input]')!;
+    const send = box.querySelector<HTMLButtonElement>('[data-ac-send]')!;
+    const chips = box.querySelector<HTMLElement>('[data-ac-chips]');
+
+    const ask = (q: string) => {
+      if (!q.trim()) return;
+      input.value = '';
+      send.disabled = true;
+      input.blur();
+      document.dispatchEvent(new CustomEvent('johnlm:ask', { detail: q }));
+    };
+    input.addEventListener('input', () => { send.disabled = !input.value.trim(); });
+    form.addEventListener('submit', (e) => { e.preventDefault(); ask(input.value); });
+    chips?.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-q]');
+      if (b) ask(b.dataset.q!);
+    });
+  });
+</script>

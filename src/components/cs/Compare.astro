@@ -1,0 +1,29 @@
+---
+// The one comparison per study: two routes side by side, the chosen one outlined.
+interface Side {
+  label: string;
+  title: string;
+  for?: string[];
+  against?: string[];
+  chosen?: boolean;
+}
+interface Props {
+  sides: Side[];
+}
+const { sides } = Astro.props;
+---
+
+<div class="compare">
+  {
+    sides.map((s) => (
+      <div class:list={['cmp', { chosen: s.chosen }]}>
+        <div class="lab">{s.chosen ? '✓ ' : ''}{s.label}</div>
+        <div class="tt">{s.title}</div>
+        <ul>
+          {s.for?.map((x) => <li class="pro"><span aria-hidden="true">+</span><span class="sr">Good: </span>{x}</li>)}
+          {s.against?.map((x) => <li class="con"><span aria-hidden="true">−</span><span class="sr">Not so good: </span>{x}</li>)}
+        </ul>
+      </div>
+    ))
+  }
+</div>

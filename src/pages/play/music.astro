@@ -1,0 +1,61 @@
+---
+// Heavy rotation: John's top five lately. A headline with the current song, a
+// cover that turns to show the song's details, a vinyl that spins while it
+// plays, a ranked row to move through, and Spotify's player. It starts playing
+// on arrival; see scripts/music.ts.
+import Base from '../../layouts/Base.astro';
+import { play } from '../../data/site';
+---
+
+<Base title="Heavy rotation · John Etokhana" description="John Etokhana’s top five songs lately, straight from his Spotify." bodyClass="mx-page">
+  <main class="mx" data-songs={JSON.stringify(play.songs)}>
+    <a class="cs-back" href="/?mode=play">← Play</a>
+
+    <section class="mx-stage" data-mx aria-label="Song player">
+      <div class="mx-intro">
+        <p class="pl-label">Heavy rotation</p>
+        <h1 class="mx-head">Lately I’ve been playing <span class="mx-accent" data-mx-title></span></h1>
+        <p class="mx-by" data-mx-artist></p>
+      </div>
+
+      <div class="mx-hero">
+        <div class="mx-disc" aria-hidden="true"><img data-mx-label alt="" referrerpolicy="no-referrer" /></div>
+        <figure class="mx-cover" tabindex="0" aria-describedby="mx-stats">
+          <img data-mx-img alt="" referrerpolicy="no-referrer" />
+          <span class="mx-grain" aria-hidden="true"></span>
+          <dl class="mx-stats" id="mx-stats">
+            <div><dt>Album</dt><dd data-mx-album>–</dd></div>
+            <div><dt>Released</dt><dd data-mx-released>–</dd></div>
+            <div><dt>Length</dt><dd data-mx-length>–</dd></div>
+            <div><dt>Last played</dt><dd data-mx-when>–</dd></div>
+          </dl>
+          <button type="button" class="mx-play" data-mx-play aria-label="Play">
+            <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" /></svg>
+            <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
+          </button>
+        </figure>
+      </div>
+
+      <div class="mx-player"><div data-mx-embed></div></div>
+      <p class="mx-note" data-mx-note>Tap anywhere to drop the needle. Spotify plays a preview, or the full song if you’re signed in.</p>
+
+      <div class="mx-row-head">
+        <h2 class="pl-label" data-mx-list-label>A few favourites</h2>
+        <div class="mx-arrows">
+          <button type="button" class="mx-arrow" data-mx-prev aria-label="Previous song">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6" /></svg>
+          </button>
+          <button type="button" class="mx-arrow" data-mx-next aria-label="Next song">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 6 6 6-6 6" /></svg>
+          </button>
+        </div>
+      </div>
+      <ol class="mx-ranks" data-mx-ranks aria-label="Songs"></ol>
+    </section>
+  </main>
+</Base>
+
+<script>
+  import { initMusic } from '../../scripts/music';
+  initMusic();
+</script>

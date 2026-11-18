@@ -1,0 +1,52 @@
+---
+// A user flow drawn like a whiteboard: two panels on a dotted canvas, the old
+// way on top and the shipped flow below, boxes joined left to right by
+// arrows. In the shipped flow a dark box is the user's turn and a tinted box
+// is the agent's, each written as a user story. A dashed arrow joins the two
+// panels at their first step. On phones the rows stack into columns.
+interface Step {
+  who: 'you' | 'agent';
+  act: string;
+}
+interface Props {
+  before: { label?: string; steps: string[]; note?: string };
+  after: { label: string; steps: Step[] };
+  caption?: string;
+}
+const { before, after, caption } = Astro.props;
+const cols = Math.max(before.steps.length, after.steps.length);
+const arrow = '<svg viewBox="0 0 26 12" aria-hidden="true"><path d="M1 6h22M18.5 1.5 23.5 6l-5 4.5" /></svg>';
+---
+
+<figure class="flow" style={`--cols:${cols}`}>
+  <div class="fb-lane">
+    <p class="fb-title">{before.label ?? 'Before'}{before.note && <span> · {before.note}</span>}</p>
+    <ol class="fb-row">
+      {
+        before.steps.map((s, i) => (
+          <li>
+            <span class="fb-box fb-box--old">{s}</span>
+            {i < before.steps.length - 1 && <span class="fb-arrow" set:html={arrow} />}
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+  <div class="fb-link" aria-hidden="true">
+    <svg viewBox="0 0 12 44"><path class="fb-dash" d="M6 0v38" /><path d="M1.5 34 6 39.5 10.500 34" /></svg>
+  </div>
+  <div class="fb-lane fb-lane--new">
+    <ol class="fb-row">
+      {
+        after.steps.map((s, i) => (
+          <li>
+            <span class:list={['fb-box', `fb-box--${s.who}`]}>{s.act}</span>
+            {i < after.steps.length - 1 && <span class="fb-arrow" set:html={arrow} />}
+          </li>
+        ))
+      }
+    </ol>
+    <p class="fb-title">{after.label}</p>
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>

@@ -1,0 +1,165 @@
+---
+// Bottom of every page, above the footer (after Cassandra Tang's block):
+// a small label, the album cover, the song and the artist.
+// Live: John's Spotify via the Netlify function, checked every 30 seconds.
+// Nothing live: it rotates through his last few played songs. No Spotify at
+// all: it rotates through his picks. Each change animates the swap.
+import { play } from '../data/site';
+const songs = play.songs;
+const first = songs[0];
+---
+
+{
+  first && (
+    <section class="np" data-np data-songs={JSON.stringify(songs)} aria-label="Music">
+      <h2 class="np-label">
+        <span data-np-label>On repeat</span>
+        <span class="np-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+      </h2>
+      <a class="np-row" data-np-link href={first.href} target="_blank" rel="noopener">
+        <span class:list={['np-art', !first.image && 'blank']}><img data-np-img src={first.image} alt="" width="40" height="40" decoding="async" referrerpolicy="no-referrer" /></span>
+        <span class="np-info">
+          <span class="np-t" data-np-title>{first.title}</span>
+          <span class="np-a" data-np-artist>{first.artist}</span>
+        </span>
+      </a>
+    </section>
+  )
+}
+
+<script>
+  type Track = { title: string; artist: string; href?: string; image?: string; live?: boolean; played?: string; recent?: Track[] };
+
+  // "3 hours ago", "yesterday"
+  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  const ago = (iso: string) => {
+    const s = (Date.parse(iso) - Date.now()) / 1000;
+    if (s > -60) return 'just now';
+    const steps: [number, Intl.RelativeTimeFormatUnit][] = [[60, 'minute'], [3600, 'hour'], [86400, 'day'], [604800, 'week']];
+    let [size, unit] = steps[0];
+    for (const st of steps) if (-s >= st[0]) [size, unit] = st;
+    return rtf.format(Math.round(s / size), unit);
+  };
+
+  const box = document.querySelector<HTMLElement>('[data-np]');
+  if (box) {
+    let picks: Track[] = JSON.parse(box.dataset.songs || '[]');
+    const $ = <T extends Element>(s: string) => box.querySelector<T>(s)!;
+    const label = $<HTMLElement>('[data-np-label]');
+    const link = $<HTMLAnchorElement>('[data-np-link]');
+    const img = $<HTMLImageElement>('[data-np-img]');
+    const title = $<HTMLElement>('[data-np-title]');
+    const artist = $<HTMLElement>('[data-np-artist]');
+    const art = $<HTMLElement>('.np-art');
+    const still = matchMedia('(prefers-reduced-motion: reduce)');
+    const spring = 'cubic-bezier(0.34, 1.4, 0.64, 1)';
+    const out = 'cubic-bezier(0.23, 1, 0.32, 1)'; // leaving uses ease-out too: it starts moving at once
+    let current = picks[0]?.title ?? '';
+    let busy = false;
+
+    // Recent songs say when they played, like Cassandra's "Last played (3 hours ago)"
+    const recentLabel = (t: Track) => (t.played ? `${t === picks[0] ? 'Last played' : 'Played'} (${ago(t.played)})` : 'Recently played');
+
+    const fill = (t: Track) => {
+      if (box.dataset.mode === 'recent') label.textContent = recentLabel(t);
+      title.textContent = t.title;
+      artist.textContent = t.artist;
+      if (t.href) link.href = t.href;
+      else link.removeAttribute('href');
+      if (t.image) img.src = t.image;
+      art.classList.toggle('blank', !t.image);
+    };
+
+    // Old song leaves (cover tips away, lines lift and fade), new song lands
+    // (cover springs in, title then artist rise into place).
+    const swap = async (t: Track) => {
+      if (busy || t.title === current) return;
+      busy = true;
+      current = t.title;
+      if (t.image) await new Promise((r) => { const p = new Image(); p.referrerPolicy = 'no-referrer'; p.onload = p.onerror = r; p.src = t.image!; });
+      if (still.matches) {
+        fill(t);
+        busy = false;
+        return;
+      }
+      const leave = { duration: 180, easing: out, fill: 'forwards' as const };
+      await Promise.all([
+        art.animate([{ transform: 'none', opacity: 1 }, { transform: 'scale(0.86) rotate(-8deg)', opacity: 0 }], leave).finished,
+        title.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-6px)', opacity: 0 }], leave).finished,
+        artist.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-6px)', opacity: 0 }], { ...leave, delay: 30 }).finished,
+      ]);
+      fill(t);
+      const land = (delay: number, duration = 320) => ({ duration, delay, easing: spring, fill: 'both' as const });
+      await Promise.all([
+        art.animate([{ transform: 'scale(0.8) rotate(10deg)', opacity: 0 }, { transform: 'none', opacity: 1 }], land(0, 420)).finished,
+        title.animate([{ transform: 'translateY(8px)', opacity: 0 }, { transform: 'none', opacity: 1 }], land(50)).finished,
+        artist.animate([{ transform: 'translateY(8px)', opacity: 0 }, { transform: 'none', opacity: 1 }], land(100)).finished,
+      ]);
+      art.getAnimations().concat(title.getAnimations(), artist.getAnimations()).forEach((a) => a.cancel());
+      busy = false;
+    };
+
+    const setMode = (mode: 'live' | 'recent' | 'picks') => {
+      label.textContent = mode === 'live' ? 'Now playing' : mode === 'recent' ? recentLabel(picks[0]) : 'On repeat';
+      box.classList.toggle('is-live', mode === 'live');
+    };
+
+    // Rotate through the picks when Spotify has nothing to say.
+    let i = 0;
+    let timer = 0;
+    let paused = false;
+    const rotate = () => {
+      window.clearInterval(timer);
+      if (picks.length < 2) return;
+      timer = window.setInterval(() => {
+        if (paused || document.hidden) return;
+        i = (i + 1) % picks.length;
+        swap(picks[i]);
+      }, 6000);
+    };
+    box.addEventListener('pointerenter', () => (paused = true));
+    box.addEventListener('pointerleave', () => (paused = false));
+    box.addEventListener('focusin', () => (paused = true));
+    box.addEventListener('focusout', () => (paused = false));
+
+    const ask = async () => {
+      try {
+        const r = await fetch('/.netlify/functions/now-playing', { headers: { accept: 'application/json' } });
+        if (r.status !== 200) return false;
+        const t: Track = await r.json();
+        if (!t?.title) return false;
+        if (t.live) {
+          window.clearInterval(timer);
+          setMode('live');
+          swap(t);
+        } else if (t.recent?.length && box.dataset.mode !== 'recent') {
+          // Nothing playing: rotate through the last few songs instead of the picks.
+          box.dataset.mode = 'recent';
+          picks = t.recent.slice(0, 5);
+          i = 0;
+          setMode('recent');
+          swap(picks[0]);
+          rotate();
+        } else if (!t.recent?.length) {
+          window.clearInterval(timer);
+          setMode('recent');
+          swap(t);
+        }
+        if (t.live) box.dataset.mode = 'live';
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    setMode('picks');
+    rotate();
+    // The function only exists on Netlify, so skip it in local dev.
+    if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+      ask().then((ok) => {
+        if (!ok) return;
+        window.setInterval(() => { if (!document.hidden) ask(); }, 30000);
+      });
+    }
+  }
+</script>

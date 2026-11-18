@@ -1,0 +1,27 @@
+---
+// "How I design with AI", restored as it was on the live site: the painted,
+// drifting stages, floating windows and Claude replies that stream in as you
+// scroll. Markup lives in src/content/notes-ai-body.html; styles are scoped to
+// .essay-v1. Section 3 uses the verified Rivva numbers.
+import Base from '../layouts/Base.astro';
+import '../styles/essay-v1.css';
+import body from '../content/notes-ai-body.html?raw';
+---
+
+<Base title="How I design with AI · John Etokhana" description="How I use Claude and Claude Code across design, research and prototyping, and how I design the AI that ships to users.">
+  <div class="essay-v1">
+    <div class="essay-back"><a class="cs-back" href="/?mode=work#notes">← John Etokhana</a></div>
+    <Fragment set:html={body} />
+  </div>
+</Base>
+
+<script src="../scripts/essay-v1.js"></script>
+<script>
+  import { initProtos } from '../scripts/proto';
+  initProtos();
+</script>
+
+<style is:global>
+  .essay-v1 .essay-back { max-width: calc(var(--col) + 48px); margin: 0 auto; padding: 48px 24px 0; }
+  .essay-v1 .essay-back .cs-back { margin-bottom: 0; }
+</style>

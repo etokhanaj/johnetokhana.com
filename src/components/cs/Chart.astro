@@ -1,0 +1,63 @@
+---
+// A recreated chart in Cassandra Tang's style: a white card in the grey
+// frame, grey for the earlier value, one brand colour for the later one,
+// mono labels, a small legend, values written on the bars.
+// `independent` scales each group on its own (for groups in different units);
+// the printed values carry the real numbers either way.
+interface Value { v: number; label: string }
+interface Group { name: string; values: Value[] }
+interface Props {
+  groups: Group[];
+  series: string[]; // legend names, one per value in each group
+  color?: string; // colour of the last series
+  independent?: boolean;
+  alt: string;
+}
+const { groups, series, color = 'var(--ink)', independent = false, alt } = Astro.props;
+const fills = series.map((_, i) => (i === series.length - 1 ? color : i === 0 ? 'var(--chart-base)' : 'var(--chart-mid)'));
+const W = 560, H = 320, top = 84, bottom = 44, left = 8, right = 8;
+const plotH = H - top - bottom;
+const gw = (W - left - right) / groups.length;
+const bw = Math.min(56, (gw * 0.62) / series.length);
+const globalMax = Math.max(...groups.flatMap((g) => g.values.map((x) => x.v)));
+---
+
+<figure class="frame frame--chart">
+  <div class="frame-box">
+    <div class="chart-card">
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={alt}>
+        <g class="legend">
+          {series.map((s, i) => (
+            <g transform={`translate(${left + i * 170}, 6)`}>
+              <rect width="12" height="12" rx="2" style={`fill:${fills[i]}`} />
+              <text x="20" y="10.5">{s}</text>
+            </g>
+          ))}
+        </g>
+        <line x1={left} x2={W - right} y1={H - bottom} y2={H - bottom} class="axis" />
+        {groups.map((g, gi) => {
+          const max = independent ? Math.max(...g.values.map((x) => x.v)) : globalMax;
+          const total = bw * g.values.length + 8 * (g.values.length - 1);
+          const x0 = left + gi * gw + (gw - total) / 2;
+          return (
+            <g>
+              {g.values.map((val, vi) => {
+                const h = Math.max(2, (val.v / max) * plotH * (independent ? 0.86 : 1));
+                const x = x0 + vi * (bw + 8);
+                const y = H - bottom - h;
+                const last = vi === g.values.length - 1;
+                return (
+                  <g>
+                    <rect x={x} y={y} width={bw} height={h} rx="2" style={`fill:${fills[vi]}`} />
+                    <text x={x + bw / 2} y={y - 8} class:list={['val', last && 'val--on']}>{val.label}</text>
+                  </g>
+                );
+              })}
+              <text x={left + gi * gw + gw / 2} y={H - bottom + 24} class="cat">{g.name}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  </div>
+</figure>

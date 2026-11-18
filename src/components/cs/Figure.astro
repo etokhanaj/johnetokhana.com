@@ -1,0 +1,36 @@
+---
+// A screen in a flat grey frame. frame="phone" sizes a tall phone screen;
+// frame="plain" is for charts and diagrams (no grey box).
+interface Props {
+  src?: string;
+  srcs?: string[]; // several screens that crossfade in one frame
+  video?: string; // path without extension: expects .webm, .mp4 and -poster.jpg
+  rate?: number; // playback speed for a video, e.g. 1.5
+  alt?: string;
+  caption?: string;
+  frame?: 'screen' | 'phone' | 'plain';
+}
+const { src, srcs, video, rate, alt = '', caption, frame = 'screen' } = Astro.props;
+---
+
+<figure class:list={['frame', `frame--${frame}`]}>
+  <div class="frame-box">
+    {
+      video ? (
+        <video autoplay muted loop playsinline preload="metadata" poster={`${video}-poster.jpg`} aria-label={alt} data-rate={rate}>
+          <source src={`${video}.mp4`} type="video/mp4" />
+          <source src={`${video}.webm`} type="video/webm" />
+        </video>
+      ) : srcs ? (
+        <span class="seq" data-seq>
+          {srcs.map((s, i) => (
+            <img src={s} alt={i === 0 ? alt : ''} aria-hidden={i === 0 ? undefined : 'true'} class:list={[i === 0 && 'on']} loading="lazy" decoding="async" />
+          ))}
+        </span>
+      ) : (
+        <img src={src} alt={alt} loading="lazy" decoding="async" />
+      )
+    }
+  </div>
+  {caption && <figcaption class="cap">{caption}</figcaption>}
+</figure>

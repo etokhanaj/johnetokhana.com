@@ -1,0 +1,177 @@
+---
+dek: "Marketing teams need campaign pages quickly, but they also need control over their brand and over what an AI agent changes. I set Episode's agent-first direction and designed how marketers confirm their brand, check the agent's work beside the chat, and see what's working before they act on it."
+role: Product designer and design engineer (contract)
+status: Agentic flow shipped, sites editable from the theatre
+gallery: ['/assets/episode/theatre-hero.jpg']
+draft: true
+---
+import Led from '../../components/cs/Led.astro';
+import Figure from '../../components/cs/Figure.astro';
+import Compare from '../../components/cs/Compare.astro';
+import Chapter from '../../components/cs/Chapter.astro';
+import FlowCard from '../../components/cs/FlowCard.astro';
+import FigureRow from '../../components/cs/FigureRow.astro';
+import Quote from '../../components/cs/Quote.astro';
+
+## Overview
+
+Episode builds landing pages from a prompt and tests them. I joined in May 2026 on contract, and <Led>I lead design and direct the front-end build for Episode's campaign management platform.</Led> I specify each change, direct Claude Code and Cursor to build it in React and TypeScript, and QA it before it ships.
+
+My work here comes in two chapters. In the first, I set Episode's agent-first direction and designed where the agent's work lives. In the second, I designed how a business sees what's working when most of its pages have little traffic.
+
+I work with the CEO and the CTO. They signed off my spec, and the engineers built to the requests I wrote for them. Episode is in private beta with paying customers, so every screen here uses demo data.
+
+## What's the impact?
+
+- Customers published 38 campaign sites in the first month of onboarding. That's a strong sign they used the product to get work out, though I wouldn't claim the design alone caused it
+- In sessions, three businesses, then seven more, preferred reviewing the agent's work beside the chat to landing in the editor
+- Episode became agent-first. Pages, articles, documents, onboarding, analytics questions and account campaigns all run through one agent
+- ABM pages, a landing page for every company in a sales list, shipped through the agent: one sentence and one question set them up
+- Charts and tests now say "not enough data yet" instead of showing a confident answer from a handful of visits
+
+<Chapter n={1} id="agent" title="Where should an agent's work live?" />
+
+### What's the problem?
+
+The AI did the hard part, but everything around it worked like ordinary software: a dashboard, a creation wizard, and Studio, a page editor with a panel of settings. In May I wrote the spec that set a new direction: the chat is the primary interface, and the page is something it produces.
+
+Even with the spec, our next big feature came out in steps. ABM pages, short for account-based marketing, make one landing page for every company in a list, so a sales team can send each one a page written for it. In July I designed it the usual way: set up and map a spreadsheet, shape a first page, review the rest, publish. I directed its front end in nine parts in under two weeks, switched off for customers.
+
+<FigureRow
+  wide
+  items={[
+    { srcs: ['/assets/episode/built-step-1.jpg', '/assets/episode/built-step-2.jpg', '/assets/episode/built-step-3.jpg', '/assets/episode/built-step-4.jpg'], steps: ['Set up', 'First page', 'Review', 'Publish'], holds: [5, 4, 4, 4], alt: 'Where ABM pages started, as built in July with demo data: Set up, where you upload a spreadsheet and map each column; First page, shaping one page in the editor as the template; Review, a grid of pages to approve or reject one by one; and Publish, a table of web addresses to confirm', label: 'Where we started in July: four steps, built and never turned on for customers' },
+  ]}
+/>
+
+### Is this a real problem?
+
+Before turning it on, I tried three competitors myself. Two stood out. Ploy never asked for a file. Mutiny just asks how tailored each page should be. Our design doc that day said it plainly: "we automated the decisions and manualised the plumbing."
+
+Our flow asked people for things the agent could look up, and made them decide everything before they'd seen a page. My own feature broke the rule I'd set in May.
+
+### What did we ship?
+
+#### The same job, as a conversation
+
+The same day, I redrew setup as a conversation. It cost about a week of front end, but the generation, review and publish parts carried over.
+
+<FlowCard
+  before={{ steps: ['Map spreadsheet', 'Build first page', 'Review remaining pages', 'Publish'], note: 'Four screens, and every decision before anyone saw a page.' }}
+  after={{
+    label: 'Shipped in August and September, as a conversation',
+    steps: [
+      { who: 'you', act: 'A user describes a campaign' },
+      { who: 'agent', act: 'The agent finds the company’s brand and drafts a plan' },
+      { who: 'you', act: 'The user approves the master page' },
+      { who: 'agent', act: 'The agent builds the pages and flags unknown companies' },
+      { who: 'you', act: 'The user publishes the pages together' },
+    ],
+  }}
+/>
+
+The agent asks only what it can't look up: one question, how tailored each page should be. The user judges one real page before the rest are made, and publishing keeps a single confirmation.
+
+<Figure video="/assets/episode/abm-interaction" rate={1.5} alt="ABM pages for Inga for Teams, a fictional campaign: a list of six companies attached on Home with one sentence; Episode shows each step as it works, then asks to confirm the Inga brand kit in a question panel where the composer was; the campaign plan opens beside the chat and Build the pages is chosen; the master page builds in the theatre with Stop and a time estimate; five company pages land in the outputs and the finished turn folds under Worked for 4m 47s, with its summary below; one company flagged Needs a segment is placed from its row menu; the pages are published to Episode subdomains and go live" />
+
+<Figure srcs={['/assets/episode/theatre-hero.jpg', '/assets/episode/abm-4.jpg', '/assets/episode/abm-5.jpg']} alt="Three moments from the run: the master page in the theatre while Episode writes the company pages, with each step ticked off, a time estimate and Stop; the accounts list with five companies in two groups and a sixth flagged Needs a segment; and the Publish 6 pages dialog with Episode subdomains selected" />
+
+#### The chat is Home
+
+At the end of July, the agent chat became Home. It's one composer for whatever you want to make: describe a page or type / for a skill, attach a file, or start from a Figma file, a zipped website or a site to clone.
+
+<Figure src="/assets/episode/home.jpg" alt="Episode Home: a greeting, one composer for describing a page or typing / for a skill, a row to start from a Figma file, a zipped website or a site to clone, and three example cards" />
+
+#### A theatre beside the chat
+
+Everything the agent makes lands in a theatre next to the conversation, so you review work without leaving it. While pages build, it ticks off each step, gives an estimate like "Usually about 5 min", and keeps Stop in reach. When the run is done, every output sits in one grid, with the master page marked.
+
+<Figure src="/assets/episode/theatre-outputs.jpg" alt="The theatre's outputs view beside the chat, where the finished turn sits folded under Worked for 4m 47s above its summary: the Inga for Teams master page, selected in blue, five company pages each addressed to a named person, and the campaign plan they were built from" />
+
+<FigureRow
+  wide
+  items={[
+    { src: '/assets/episode/page-master-top.jpg', alt: 'The top of the Inga for Teams master page: One place for everything your team saves, with a Start a team pilot button and a mood board in the product', label: 'Master page' },
+    { src: '/assets/episode/page-account-top.jpg', alt: 'The top of Fernhall Design Co.’s copy: the headline addresses Maya by name and the copy speaks to designers who save hundreds of references a week', label: 'One company’s copy' },
+  ]}
+/>
+
+In July the theatre only previewed: to change something, you opened the editor. Since September, outputs like articles and documents are editable in place. Select a sentence, say what you want, and the rewrite lands in the text with Undo and Keep.
+
+<Figure video="/assets/episode/ask-inline-edit" alt="Editing an Inga blog post in place in the Articles editor, with the post's chat on the left: a sentence is selected, Shorter, and more specific is typed into the selection menu, and the rewrite replaces it in the text with Undo and Keep" />
+
+### What didn't ship
+
+The next step was to make the theatre the main surface, with Studio's full editing inside it. I took it to a working build twice. At the merge, the CTO paused it: seven Studio behaviours had to survive untouched, and one mistake would have broken page generation, the part customers pay for. I agreed, and recommended the hybrid that shipped in September, with outputs editable in place. The full version stayed parked. It taught me to agree a stopping point with the CTO before a big build, and the team now does that before exploring.
+
+### Editing the site from the theatre
+
+In November we shipped the next step, still as a hybrid. A site in the theatre can be viewed or edited where it sits, beside the chat. Edit puts the page on a canvas, with its layers and pages on one side and style, goals and experiments on the other. Studio stays the full editor and is one click away, with the same section still selected.
+
+<Figure video="/assets/episode/theatre-site-edit" alt="Editing a site from the theatre: the Inga for Teams site open beside the chat in View; Edit is clicked and the page moves onto a canvas between a Layers and Pages card and a Style, Goals and Experiments card; Hero is selected in Layers and its title is retyped, changing the headline on the canvas; the Layers card folds to a small pill; Studio is clicked and the same site opens in the full editor with Hero still selected" />
+
+<Chapter n={2} id="converts" title="How does a business see what's working on thin data?" />
+
+### What's the problem?
+
+Self-improving pages only mean something if the business can see what's working. Most of our customers weren't analysts, and most of their pages had little traffic.
+
+In August, analytics was one long page of stacked breakdowns. Tests were worse. Episode tests versions of a page, called Takes, and Studio offered to ship any Take as the winner at any sample size, while the analytics page worked out its own answer. Two screens could disagree, and a winner could ship after a handful of visits.
+
+### What did we ship?
+
+#### Three tabs, one question each
+
+In September I split analytics into three tabs. Report shows how the site is doing in one screen: the headline numbers and traffic, then the main goal and its funnel. Explore keeps every breakdown, one at a time: acquisition, pages, goals, audience, forms and experiments, filtered by 11 dimensions from campaign to country, with any row opening into a side panel. Observe is the heatmap, for clicks, scrolls, movement and rage clicks.
+
+<Figure video="/assets/episode/analytics-tabs" alt="Analytics for Inga for Teams, a fictional site: on Report, the traffic chart with a hover tooltip, then the Team pilot started goal and its funnel from 6,396 visitors to 156 pilots; on Explore, Pages filtered to the United Kingdom and desktop, with the Start a pilot page opened in a side panel; on Observe, the home page heatmap switched between clicks, scroll depth and rage clicks" />
+
+I also tried analytics as a tab in the theatre, beside the chat, and reverted it the next day: every future metric would have been designed twice. The chat answers with a chart card and links into the report instead.
+
+#### Goals decide what counts
+
+A goal is the click or page that counts as a win, like a "Book a demo" button. Tests and reports measure the main goal first. With none set, Episode suggests the ones it already tracks. "What to do next" is picked from the numbers on the server; AI only explains the "Why?" behind it.
+
+#### Honest about thin data
+
+A page with 40 visits will happily draw a confident chart that means nothing. So every view expects missing, thin or late data. A heatmap waits for 30 sessions and says how close it is, a funnel under 30 views says its data is limited, and a missing number shows as a dash, never a zero.
+
+<Figure video="/assets/episode/heatmap-threshold" alt="Episode's heatmap view for Inga's Home page: Collecting sessions, 26 of 30, counts up as sessions arrive; at 30 the Low sample chip goes and the heatmap draws" />
+
+#### One verdict per test
+
+On 13 September I wrote the request for one verdict per test, worked out on the server, so every screen gives the same answer. The CTO built it and set the thresholds: about 100 views per Take and 90% confidence. A winning Take says by how much and how sure. When nothing separates them, the verdict says so and suggests a bigger change, which is more likely to show a gap.
+
+<Figure src="/assets/episode/verdict-no-difference.jpg" alt="Studio's Experiments panel on an Inga for Teams page: No clear winner, 57% confidence, a result needs 90%, the Original and one Take listed, a note that a bigger change is more likely to show a difference, and Keep testing or End and keep the Original" />
+
+#### One new Take at a time, not two
+
+The plan allowed two new Takes to run against the original. I cut it to one: on thin traffic, a second splits the visits three ways and every verdict takes longer.
+
+<Compare
+  sides={[
+    { label: 'Considered', title: 'Two new Takes', for: ['Explores more ideas at once'], against: ['Splits traffic three ways, so each version gets a third', 'Small pages could wait weeks for a result'] },
+    { label: 'What we shipped', title: 'One new Take', for: ['Each version gets half the traffic, so results come sooner', 'Easier for a non-analyst to read: this one or that one'], against: ['Fewer ideas tested at once'], chosen: true },
+  ]}
+/>
+
+### How did it land?
+
+<Quote by="Marketing lead at one of Episode's customers, in Slack">Kudos to you guys on the level of analytics detail on Episode</Quote>
+
+## The rules the team builds to
+
+I wrote the rules down, and added checks so new code keeps to them.
+
+- **Plans and checks.** I wrote the feature plans the team built from, and each cut came with a reason: account top-ups stayed manual, because automatic charges draw the same regulatory attention as a subscription. I checked every build against the design and logged 109 fixes, including a refund rule that had been reversed in the Spanish and French legal terms.
+
+- **A design system the AI can follow.** Taking a cue from Meta's Astryx, I turned our design system into a file the AI coding tools read before they build: every colour, size and component in the product. I fixed the 152 places where the code had drifted from the design, and new drift now fails our checks, so the product stays consistent however fast we ship.
+- **Trust rules for the agent.** It says when it needs you, Stop really stops a build, and failed, skipped and cancelled work each look different. Publishing, billing and anything you can't undo keep a button and a confirmation.
+- **Accessibility.** Keyboard focus became visible on 117 controls, and screen readers hear a reply once it's finished, not word by word.
+
+## Takeaways
+
+1. People shouldn't have to tell an agent what it can find out for itself. If it can read the list, don't ask them to map the columns.
+2. Run the competitors yourself. An afternoon in Ploy and Mutiny showed what our own flow was asking people to do.
+3. Ship the slice that can ship. The hybrid theatre was the right call, and editing a site from the theatre followed in November as the next slice.
+4. A chart from 40 visits looks as sure as one from 4,000. Design the "not enough data yet" state first, because it's what most new pages show.

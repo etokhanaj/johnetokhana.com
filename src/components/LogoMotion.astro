@@ -1,0 +1,39 @@
+---
+// The logo on a home tile, drawn in once when the tile scrolls into view.
+// Each brand gets its own entrance: Episode's frame draws itself, Rivva's mark
+// winds in, Kora's arcs rise, MilkyWay's planet swings into orbit and Pablo's
+// letters step up. The wordmark follows the mark. Hover is unchanged.
+import episodeRaw from '../../public/assets/episode/wordmark-horizontal-white.svg?raw';
+import pabloRaw from '../../public/assets/pablo/logo-white.svg?raw';
+
+interface Props { slug: string; org: string }
+const { slug, org } = Astro.props;
+
+// Inline SVG with a class on each path so CSS can stage it
+function stage(raw: string, cls: (i: number) => string, extra: (i: number) => string = () => '') {
+  let i = 0;
+  return raw
+    .replace(/<svg[^>]*viewBox="([^"]+)"[^>]*>/, (_m, vb) => `<svg viewBox="${vb}" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${org}">`)
+    .replace(/<path /g, () => {
+      const n = i++;
+      return `<path class="${cls(n)}" style="--i:${n}" ${extra(n)} `;
+    });
+}
+const episode = stage(episodeRaw, (i) => (i < 3 ? 'lg-stroke' : i === 3 ? 'lg-cursor' : 'lg-letter'), (i) => (i < 3 ? 'pathLength="1"' : ''));
+const pablo = stage(pabloRaw, () => 'lg-letter');
+
+const split: Record<string, { gap: number }> = {
+  rivva: { gap: 0.17 },
+  kora: { gap: 0.139 },
+  milkyway: { gap: 0.212 },
+};
+---
+
+{slug === 'episode' && <span class="lg lg-episode" set:html={episode} />}
+{slug === 'pablo' && <span class="lg lg-pablo" set:html={pablo} />}
+{split[slug] && (
+  <span class:list={['lg', 'lg-split', `lg-${slug}`]} style={`--gap:${split[slug].gap}em`} role="img" aria-label={org}>
+    <img class="lg-mark" src={`/assets/${slug}/logo-mark.png`} alt="" />
+    <span class="lg-wordwrap"><img class="lg-word" src={`/assets/${slug}/logo-word.png`} alt="" /></span>
+  </span>
+)}

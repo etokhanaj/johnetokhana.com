@@ -1,0 +1,9 @@
+---
+import Index from '../layouts/Index.astro';
+import PhotoPrint from '../components/PhotoPrint.astro';
+import { photos } from '../data/site';
+---
+
+<Index title="Photos" intro="Places and people. Mostly iPhone." active="photos">
+  {photos.map((photo) => <PhotoPrint photo={photo} />)}
+</Index>

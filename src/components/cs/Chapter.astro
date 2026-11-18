@@ -1,0 +1,16 @@
+---
+// Opens one chapter of a two-chapter study: a numbered label, the chapter's
+// question as its heading, and (in the slot) the impact bullets that lead it.
+interface Props {
+  n: number;
+  id: string;
+  title: string;
+}
+const { n, id, title } = Astro.props;
+---
+
+<header class="chapter">
+  <span class="ch-n">Chapter {n}</span>
+  <h2 id={id}>{title}</h2>
+  <slot />
+</header>

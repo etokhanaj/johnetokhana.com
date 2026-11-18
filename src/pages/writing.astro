@@ -1,0 +1,27 @@
+---
+import Index from '../layouts/Index.astro';
+import { media, writing } from '../data/site';
+const items = [...writing, ...media];
+---
+
+<Index title="Writing & media" intro="Longer pieces on whatever I've been chewing on, and press." active="writing">
+  <ul class="links">
+    {
+      items.map((item) => (
+        <li data-reveal>
+          {item.href ? (
+            <a href={item.href} target={item.href.startsWith('/') ? undefined : '_blank'} rel="noopener">
+              <span class="t">{item.title}</span> <span class="arrow">{item.href.startsWith('/') ? '→' : '↗'}</span>
+              <span class="src">{item.date}{item.excerpt && ` · ${item.excerpt}`}</span>
+            </a>
+          ) : (
+            <span class="row">
+              <span class="t">{item.title}</span>
+              <span class="src">{item.date}{item.excerpt && ` · ${item.excerpt}`}</span>
+            </span>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</Index>
